@@ -1,0 +1,4 @@
+*.class
+META-INF/*
+output
+output.jar

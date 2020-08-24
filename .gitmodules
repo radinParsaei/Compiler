@@ -1,0 +1,6 @@
+[submodule "CompilerBackend"]
+	path = CompilerBackend
+	url = https://github.com/radinParsaei/CompilerBackend
+[submodule "compiler-test"]
+	path = compiler-test
+	url = https://github.com/radinParsaei/compiler-test
