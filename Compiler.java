@@ -32,7 +32,7 @@ public class Compiler extends CompilerBase {
 				System.out.print("> ");
 				return new Scanner(System.in).nextLine() + "\n";
 			} catch (java.util.NoSuchElementException e) {
-				System.out.println("Running file [if available] (for closing use ctrl+c)");
+				System.out.println("Running file [if available] (ctrl+c to quit)");
 			}
 		}
 		File file = new File(fileName);
@@ -86,6 +86,10 @@ public class Compiler extends CompilerBase {
   }
 
 	public void afterParse(Parser result) {
+		if (result.getTokens().size() != 1) {
+			syntaxError("Syntax Error");
+			return ;
+		}
 		if (result.getTokens().get(0).getName().equals("program")) {
       if (compiledFileName != null) {
         try {
