@@ -52,6 +52,10 @@ public class Compiler extends CompilerBase {
 		lexer.add("TXT", "\".*?(\")|\'.*?(\')");
 		//Number
 		lexer.add("NUM", "\\d+\\.?\\d*");
+		//Boolean
+		lexer.add("BOOL", "true|false");
+		//Null
+		lexer.add("NULL", "null");
 		//spaces (ignore)
 		lexer.add("IGNORE", " +");
     //print
@@ -75,12 +79,22 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Text(text.substring(1, text.length() - 1));
 	}
 
-  @ParserEvent(map = "program : PRINT exp SEP", priority = 2)
+	@ParserEvent(map = "exp : BOOL", priority = 2)
+	public Object booleanExpression(Parser parser) {
+		return new SyntaxTree.Boolean(parser.getTokens().get(0).getText().equals("true")? true:false);
+	}
+
+	@ParserEvent(map = "exp : NULL", priority = 3)
+	public Object nullExpression(Parser parser) {
+		return new SyntaxTree.Null();
+	}
+
+  @ParserEvent(map = "program : PRINT exp SEP", priority = 4)
 	public Object print(Parser parser) {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-  @ParserEvent(map = "program : program program", priority = 3)
+  @ParserEvent(map = "program : program program", priority = 5)
   public Object programs(Parser parser) {
     return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
   }
