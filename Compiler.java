@@ -60,6 +60,10 @@ public class Compiler extends CompilerBase {
 		lexer.add("IGNORE", " +");
     //print
 		lexer.add("PRINT", "print ");
+		//id
+		lexer.add("ID", "([A-Za-z]+\\d*_*)+");
+		//operators
+		lexer.add("SET", "=");
     //seperator
 		lexer.add("SEP", new SeperatorChecker());
 	}
@@ -89,12 +93,27 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Null();
 	}
 
-  @ParserEvent(map = "program : PRINT exp SEP", priority = 4)
+	@ParserEvent(map = "set : ID SET", priority = 4)
+	public Object set(Parser parser) {
+		return parser.getTokens().get(0).getText();
+	}
+
+	@ParserEvent(map = "exp : ID", priority = 5)
+	public Object variable(Parser parser) {
+		return new SyntaxTree.Variable(parser.getTokens().get(0).getText());
+	}
+
+	@ParserEvent(map = "program : set exp SEP", priority = 6)
+	public Object setVariable(Parser parser) {
+		return new SyntaxTree.SetVariable((String)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(1).getObject());
+	}
+
+	@ParserEvent(map = "program : PRINT exp SEP", priority = 7)
 	public Object print(Parser parser) {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-  @ParserEvent(map = "program : program program", priority = 5)
+  @ParserEvent(map = "program : program program", priority = 8)
   public Object programs(Parser parser) {
     return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
   }
