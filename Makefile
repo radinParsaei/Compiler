@@ -17,9 +17,11 @@ submodule-VM:
 	$(MAKE) -C CompilerBackend/VM
 endif
 
-clean:
-	$(MAKE) -C CompilerBackend/VM clean
+clean-classes:
 	$(RM) -r *.class output.jar META-INF output
+
+clean: clean-classes
+	$(MAKE) -C CompilerBackend/VM clean
 
 native-image: INF
 	native-image 2>&1 >/dev/null && echo native-image installed! || (echo native-image not found && exit 1)
