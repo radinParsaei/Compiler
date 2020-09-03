@@ -61,16 +61,21 @@ public class Compiler extends CompilerBase {
     //print
 		lexer.add("PRINT", "print ");
 		//id
-		lexer.add("ID", "([A-Za-z]+\\d*_*)+");
+		lexer.add("ID", "([A-Za-z]*\\d*_*)+");
 		//operators
 		lexer.add("SET", "=");
+		lexer.add("OP1", "\\*|\\/");
+		lexer.add("OP2", "\\-|\\+");
     //seperator
 		lexer.add("SEP", new SeperatorChecker());
 	}
 
 	public void afterLex(Parser result) {}
 
-	public void parse(Parser parser) {}
+	public void parse(Parser parser) {
+		// System.out.println(parser);
+		// System.out.println(getCounter());
+	}
 
 	@ParserEvent(map = "exp : NUM", priority = 0)
 	public Object number(Parser parser) {
@@ -100,26 +105,53 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : ID", priority = 5)
 	public Object variable(Parser parser) {
+		System.out.println(parser);
 		return new SyntaxTree.Variable(parser.getTokens().get(0).getText());
 	}
 
-	@ParserEvent(map = "program : set exp SEP", priority = 6)
+	@ParserEvent(map = "exp : exp OP1 exp", priority = 6)
+	public Object multiplicationAndDivision(Parser parser) {
+		if (parser.getTokens().get(1).getText().equals("*")) {
+			return new SyntaxTree.Mul((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+		}
+		return new SyntaxTree.Div((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+	}
+
+	@ParserEvent(map = "exp : exp OP2 exp", priority = 7)
+	public Object additionAndSubtraction(Parser parser) {
+		if (parser.getTokens().get(1).getText().equals("+")) {
+			return new SyntaxTree.Add((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+		}
+		return new SyntaxTree.Sub((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+	}
+
+	@ParserEvent(map = "exp : OP2 exp", priority = 8)
+	public Object negativeAndPositive(Parser parser) {
+		setCounter(6);
+		if (parser.getTokens().get(0).getText().equals("+")) {
+			return parser.getTokens().get(1).getObject();
+		}
+		return new SyntaxTree.Negative((ValueBase)parser.getTokens().get(1).getObject());
+	}
+
+	@ParserEvent(map = "program : set exp SEP", priority = 9)
 	public Object setVariable(Parser parser) {
 		return new SyntaxTree.SetVariable((String)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "program : PRINT exp SEP", priority = 7)
+	@ParserEvent(map = "program : PRINT exp SEP", priority = 10)
 	public Object print(Parser parser) {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-  @ParserEvent(map = "program : program program", priority = 8)
+  @ParserEvent(map = "program : program program", priority = 11)
   public Object programs(Parser parser) {
     return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
   }
 
 	public void afterParse(Parser result) {
 		if (result.getTokens().size() != 1) {
+			System.out.println("Syntax is:\n" + result);
 			syntaxError("Syntax Error");
 			return ;
 		}
