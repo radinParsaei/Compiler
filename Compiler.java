@@ -66,6 +66,8 @@ public class Compiler extends CompilerBase {
 		lexer.add("OP2", "\\-|\\+");
 		//if (keyword)
 		lexer.add("IF", "if ");
+		//else (keyword)
+		lexer.add("ELSE", "else");
 		//brackets
 		lexer.add("OP_BRACKET", "\\{");
 		lexer.add("CL_BRACKET", "\\}");
@@ -77,7 +79,11 @@ public class Compiler extends CompilerBase {
 
 	public void afterLex(Parser result) {}
 
-	public void parse(Parser parser) {}
+	public void parse(Parser parser) {
+		if (getCounter() == 0) {
+			parser.on("SEP SEP", "SEP", (parser1) -> null);
+		}
+	}
 
 	@ParserEvent(map = "exp : NUM", priority = 0)
 	public Object number(Parser parser) {
@@ -150,11 +156,43 @@ public class Compiler extends CompilerBase {
     return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
   }
 
-	@ParserEvent(map = "program : IF exp OP_BRACKET program CL_BRACKET SEP|IF exp SEP OP_BRACKET program CL_BRACKET SEP|IF exp SEP OP_BRACKET SEP program CL_BRACKET SEP|IF exp OP_BRACKET SEP program CL_BRACKET SEP", priority = 12)
+	@ParserEvent(map = "ifprogram : IF exp OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET SEP program CL_BRACKET|IF exp OP_BRACKET SEP program CL_BRACKET", priority = 12)
   public Object _if(Parser parser) {
 		setCounter(11);
 		parser.remove("SEP");
     return new SyntaxTree.If((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
+  }
+
+	@ParserEvent(map = "ifprogram : ifprogram ELSE ifprogram|ifprogram SEP ELSE ifprogram", priority = 13)
+  public Object elseif(Parser parser) {
+		setCounter(11);
+		parser.remove("SEP");
+		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
+    SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
+		while (tmp.getElseProgram() != null) {
+			tmp = (SyntaxTree.If)tmp.getElseProgram();
+		}
+		tmp.addElse((ProgramBase)parser.getTokens().get(2).getObject());
+		return tmp2;
+  }
+
+	@ParserEvent(map = "program : ifprogram ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram ELSE SEP OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET SEP program CL_BRACKET SEP|ifprogram SEP ELSE SEP OP_BRACKET SEP program CL_BRACKET SEP|ifprogram ELSE OP_BRACKET SEP program CL_BRACKET SEP", priority = 14)
+  public Object _else(Parser parser) {
+		setCounter(11);
+		parser.remove("SEP");
+		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
+    SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
+		while (tmp.getElseProgram() != null) {
+			tmp = (SyntaxTree.If)tmp.getElseProgram();
+		}
+		tmp.addElse((ProgramBase)parser.getTokens().get(3).getObject());
+		return tmp2;
+  }
+
+	@ParserEvent(map = "program : ifprogram SEP", priority = 15)
+  public Object ifToProgram(Parser parser) {
+		setCounter(11);
+    return parser.getTokens().get(0).getObject();
   }
 
 	public void afterParse(Parser result) {
