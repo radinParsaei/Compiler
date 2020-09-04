@@ -1,13 +1,26 @@
 import java.util.Scanner;
+import java.io.File;
 
 public class Main extends CompilerMain {
 	public static void main(String[] args) {
 		ArgParser argParser = new ArgParser(args);
 		String fileName;
+		boolean hotReload = false;
 		try {
 			fileName = argParser.getArgs().get(0);
 		} catch (IndexOutOfBoundsException e) {
 			fileName = "";
+		}
+		if (argParser.getItems().contains("hotreload") || argParser.getItems().contains("r")) {
+			if (fileName != "") {
+				hotReload = true;
+				if (argParser.getItems().contains("shell")) {
+					System.err.println("ERROR: shell and hot reload Interference");
+					hotReload = false;
+				}
+			} else {
+				System.err.println("when hot reload enabled, the file name must be entered [hot reload disabled]");
+			}
 		}
 		if (fileName.endsWith(".ser")) {
 			SyntaxTreeSerializer serializer = new SyntaxTreeSerializer();
@@ -49,6 +62,16 @@ public class Main extends CompilerMain {
 					System.exit(1);
 				}
 			}
-		} while (argParser.getItems().contains("shell"));
+			if (hotReload) {
+				long lastModified, previousLastModified;
+				File file = new File(fileName);
+				lastModified = file.lastModified();
+				previousLastModified = lastModified;
+				while (lastModified == previousLastModified) {
+					lastModified = file.lastModified();
+				}
+				System.out.println("\n" + fileName + " rewritten...\n");
+			}
+		} while (argParser.getItems().contains("shell") || hotReload);
 	}
 }
