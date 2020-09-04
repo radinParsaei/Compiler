@@ -196,6 +196,7 @@ public class Compiler extends CompilerBase {
   }
 
 	public void afterParse(Parser result) {
+		result.remove("SEP");
 		if (result.getTokens().size() != 1) {
 			System.out.println("Syntax is:\n" + result);
 			syntaxError("Syntax Error");
