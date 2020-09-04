@@ -44,7 +44,7 @@ public class Compiler extends CompilerBase {
 			System.exit(1);
 		}
 		scanner.useDelimiter("\\Z");
-		return scanner.nextLine() + "\n";
+		return scanner.next() + "\n";
 	}
 
 	public void initLexer(Lexer lexer) {
@@ -60,22 +60,24 @@ public class Compiler extends CompilerBase {
 		lexer.add("IGNORE", " +");
     //print
 		lexer.add("PRINT", "print ");
-		//id
-		lexer.add("ID", "([A-Za-z]*\\d*_*)+");
 		//operators
 		lexer.add("SET", "=");
 		lexer.add("OP1", "\\*|\\/");
 		lexer.add("OP2", "\\-|\\+");
+		//if (keyword)
+		lexer.add("IF", "if ");
+		//brackets
+		lexer.add("OP_BRACKET", "\\{");
+		lexer.add("CL_BRACKET", "\\}");
+		//id
+		lexer.add("ID", "([A-Za-z]*\\d*_*)+");
     //seperator
 		lexer.add("SEP", new SeperatorChecker());
 	}
 
 	public void afterLex(Parser result) {}
 
-	public void parse(Parser parser) {
-		// System.out.println(parser);
-		// System.out.println(getCounter());
-	}
+	public void parse(Parser parser) {}
 
 	@ParserEvent(map = "exp : NUM", priority = 0)
 	public Object number(Parser parser) {
@@ -105,7 +107,6 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : ID", priority = 5)
 	public Object variable(Parser parser) {
-		System.out.println(parser);
 		return new SyntaxTree.Variable(parser.getTokens().get(0).getText());
 	}
 
@@ -144,9 +145,16 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-  @ParserEvent(map = "program : program program", priority = 11)
+	@ParserEvent(map = "program : program program", priority = 11)
   public Object programs(Parser parser) {
     return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
+  }
+
+	@ParserEvent(map = "program : IF exp OP_BRACKET program CL_BRACKET SEP|IF exp SEP OP_BRACKET program CL_BRACKET SEP|IF exp SEP OP_BRACKET SEP program CL_BRACKET SEP|IF exp OP_BRACKET SEP program CL_BRACKET SEP", priority = 12)
+  public Object _if(Parser parser) {
+		setCounter(11);
+		parser.remove("SEP");
+    return new SyntaxTree.If((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
   }
 
 	public void afterParse(Parser result) {
