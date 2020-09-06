@@ -27,6 +27,10 @@ native-image: INF
 	native-image 2>&1 >/dev/null && echo native-image installed! || (echo native-image not found && exit 1)
 	native-image -jar output.jar --no-fallback -H:ReflectionConfigurationFiles=META-INF/native-image/reflect-config.json
 
+repl-native-image:
+	native-image 2>&1 >/dev/null && echo native-image installed! || (echo native-image not found && exit 1)
+	native-image -jar repl/out/artifacts/repl_jar/repl.jar --no-fallback --allow-incomplete-classpath -H:ReflectionConfigurationFiles=META-INF-repl/native-image/reflect-config.json -H:ResourceConfigurationFiles=META-INF-repl/native-image/resource-config.json -H:Name=output
+
 INF: output.jar
 	mkdir -p META-INF/native-image
 	echo 'print "OK" &' > samplecode

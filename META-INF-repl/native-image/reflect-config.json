@@ -1,0 +1,18 @@
+[
+{
+  "name":"Compiler",
+  "allDeclaredMethods":true,
+  "methods":[{"name":"syntaxError","parameterTypes":["int","java.lang.String"] }]
+},
+{
+  "name":"sun.misc.Signal",
+  "methods":[
+    {"name":"<init>","parameterTypes":["java.lang.String"] }, 
+    {"name":"handle","parameterTypes":["sun.misc.Signal","sun.misc.SignalHandler"] }
+  ]
+},
+{
+  "name":"sun.misc.SignalHandler",
+  "fields":[{"name":"SIG_DFL"}]
+}
+]

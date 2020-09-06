@@ -1,4 +1,12 @@
 *.class
-META-INF/*
 output
 output.jar
+repl/.idea
+repl/.settings
+repl/target/
+repl/out
+.classpath
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+.history
+.DS_Store

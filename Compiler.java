@@ -1,38 +1,48 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.regex.Pattern;
-import java.util.HashMap;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 
 public class Compiler extends CompilerBase {
-	private int lines;
 	private String fileName;
 	private boolean isShell;
 	private String compiledFileName;
-  private String serializeFileName;
-
-	public int getLines() {
-		return lines;
-	}
+	private String serializeFileName;
 
 	public Compiler(String fileName, boolean isShell, String compiledFileName, String serializeFileName) {
 		this.fileName = fileName;
 		this.isShell = isShell;
-    this.compiledFileName = compiledFileName;
+		this.compiledFileName = compiledFileName;
 		this.serializeFileName = serializeFileName;
 	}
 
 	public String getInputCode() {
 		if (isShell) {
 			try {
-				System.out.print("> ");
-				return new Scanner(System.in).nextLine() + "\n";
+				String line = REPLReader.readLine();
+				if (line.startsWith("/run")) {
+					if (fileName == null || fileName.equals("")) {
+						System.out.println("the filename is not set");
+						return "";
+					}
+					System.out.println("Running " + fileName);
+					System.out.println();
+					File file = new File(fileName);
+					Scanner scanner = null;
+					try {
+						scanner = new Scanner(file);
+					} catch (FileNotFoundException e) {
+						System.err.println("Can\'t open the file");
+						return "";
+					}
+					scanner.useDelimiter("\\Z");
+					return scanner.next() + "\n";
+				}
+				return line + "\n";
 			} catch (java.util.NoSuchElementException e) {
-				System.out.println("Running file [if available] (ctrl+c to quit)");
+				System.exit(0);
 			}
 		}
 		File file = new File(fileName);
@@ -58,7 +68,7 @@ public class Compiler extends CompilerBase {
 		lexer.add("NULL", "null");
 		//spaces (ignore)
 		lexer.add("IGNORE", " +");
-    //print
+		//print
 		lexer.add("PRINT", "print ");
 		//operators
 		lexer.add("SET", "=");
@@ -73,7 +83,7 @@ public class Compiler extends CompilerBase {
 		lexer.add("CL_BRACKET", "\\}");
 		//id
 		lexer.add("ID", "([A-Za-z]*\\d*_*)+");
-    //seperator
+		//seperator
 		lexer.add("SEP", new SeperatorChecker());
 	}
 
@@ -92,13 +102,13 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : TXT", priority = 1)
 	public Object text(Parser parser) {
-    String text = parser.getTokens().get(0).getText();
+		String text = parser.getTokens().get(0).getText();
 		return new SyntaxTree.Text(text.substring(1, text.length() - 1));
 	}
 
 	@ParserEvent(map = "exp : BOOL", priority = 2)
 	public Object booleanExpression(Parser parser) {
-		return new SyntaxTree.Boolean(parser.getTokens().get(0).getText().equals("true")? true:false);
+		return new SyntaxTree.Boolean(parser.getTokens().get(0).getText().equals("true"));
 	}
 
 	@ParserEvent(map = "exp : NULL", priority = 3)
@@ -152,77 +162,78 @@ public class Compiler extends CompilerBase {
 	}
 
 	@ParserEvent(map = "program : program program", priority = 11)
-  public Object programs(Parser parser) {
-    return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
-  }
+	public Object programs(Parser parser) {
+		return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
+	}
 
 	@ParserEvent(map = "ifprogram : IF exp OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET SEP program CL_BRACKET|IF exp OP_BRACKET SEP program CL_BRACKET", priority = 12)
-  public Object _if(Parser parser) {
+	public Object _if(Parser parser) {
 		setCounter(11);
 		parser.remove("SEP");
-    return new SyntaxTree.If((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
-  }
+		return new SyntaxTree.If((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
+	}
 
 	@ParserEvent(map = "ifprogram : ifprogram ELSE ifprogram|ifprogram SEP ELSE ifprogram", priority = 13)
-  public Object elseif(Parser parser) {
+	public Object elseif(Parser parser) {
 		setCounter(11);
 		parser.remove("SEP");
 		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
-    SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
+		SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
 		while (tmp.getElseProgram() != null) {
 			tmp = (SyntaxTree.If)tmp.getElseProgram();
 		}
 		tmp.addElse((ProgramBase)parser.getTokens().get(2).getObject());
 		return tmp2;
-  }
+	}
 
 	@ParserEvent(map = "program : ifprogram ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram ELSE SEP OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET SEP program CL_BRACKET SEP|ifprogram SEP ELSE SEP OP_BRACKET SEP program CL_BRACKET SEP|ifprogram ELSE OP_BRACKET SEP program CL_BRACKET SEP", priority = 14)
-  public Object _else(Parser parser) {
+	public Object _else(Parser parser) {
 		setCounter(11);
 		parser.remove("SEP");
 		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
-    SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
+		SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
 		while (tmp.getElseProgram() != null) {
 			tmp = (SyntaxTree.If)tmp.getElseProgram();
 		}
 		tmp.addElse((ProgramBase)parser.getTokens().get(3).getObject());
 		return tmp2;
-  }
+	}
 
 	@ParserEvent(map = "program : ifprogram SEP", priority = 15)
-  public Object ifToProgram(Parser parser) {
+	public Object ifToProgram(Parser parser) {
 		setCounter(11);
-    return parser.getTokens().get(0).getObject();
-  }
+		return parser.getTokens().get(0).getObject();
+	}
 
 	public void afterParse(Parser result) {
 		result.remove("SEP");
+		if (result.getTokens().size() == 0) {
+			return ;
+		}
 		if (result.getTokens().size() != 1) {
 			System.out.println("Syntax is:\n" + result);
 			syntaxError("Syntax Error");
 			return ;
 		}
 		if (result.getTokens().get(0).getName().equals("program")) {
-      if (compiledFileName != null) {
-        try {
-          FileWriter writer = new FileWriter(compiledFileName);
-          VMTools vmTools = new VMTools();
-          writer.write(vmTools.SyntaxTreeToVMByteCode((ProgramBase)result.getTokens().get(0).getObject()));
-          writer.close();
-        } catch (IOException e) {
-          System.out.println("ERROR: can\'t create output file");
-          e.printStackTrace();
-        }
-      } else {
+			if (compiledFileName != null) {
+				try {
+					FileWriter writer = new FileWriter(compiledFileName);
+					VMTools vmTools = new VMTools();
+					writer.write(vmTools.SyntaxTreeToVMByteCode((ProgramBase)result.getTokens().get(0).getObject()));
+					writer.close();
+				} catch (IOException e) {
+					System.out.println("ERROR: can\'t create output file");
+					e.printStackTrace();
+				}
+			} else {
 				((ProgramBase)result.getTokens().get(0).getObject()).eval();
-      }
+			}
 			if (serializeFileName != null) {
 				SyntaxTreeSerializer serializer = new SyntaxTreeSerializer();
 				serializer.serialize(serializeFileName, (ProgramBase)result.getTokens().get(0).getObject());
 			}
-		} else if (result.getTokens().get(0).getName().equals("SEP")) {
-      // empty line
-    } else {
+		} else {
 			System.out.println("Syntax is:\n" + result);
 			syntaxError("Syntax Error");
 		}
