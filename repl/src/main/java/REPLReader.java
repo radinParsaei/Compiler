@@ -91,6 +91,7 @@ public class REPLReader {
                     .variable(LineReader.HISTORY_FILE, Paths.get("./.history"))
                     .appName("Compiler")
                     .parser(parser)
+                    .highlighter(new Highlighter())
                     .build();
             try {
                 line = lineReader.readLine((openBracketCounter > 0? "... ":prompt1).replace("$DATE", new Date().toString()), prompt2.replace("$DATE", new Date().toString()), (Character) null, "").replace("else\u200B if", "else if");
@@ -132,6 +133,7 @@ public class REPLReader {
             Compiler compiler = new Compiler(null, false, null, null);
             Lexer lexer = new Lexer(compiler);
             compiler.initLexer(lexer);
+            lexer.setError(false);
             String tmpline = line;
             if (openBracketCounter > 0) {
                 if (previousLine == null) {
