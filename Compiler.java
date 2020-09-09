@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 public class Compiler extends CompilerBase {
-	private String fileName;
-	private boolean isShell;
-	private String compiledFileName;
-	private String serializeFileName;
+	private final String fileName;
+	private final boolean isShell;
+	private final String compiledFileName;
+	private final String serializeFileName;
 
 	public Compiler(String fileName, boolean isShell, String compiledFileName, String serializeFileName) {
 		this.fileName = fileName;
@@ -34,7 +34,7 @@ public class Compiler extends CompilerBase {
 					try {
 						scanner = new Scanner(file);
 					} catch (FileNotFoundException e) {
-						System.err.println("Can\'t open the file");
+						System.err.println("Can't open the file");
 						return "";
 					}
 					scanner.useDelimiter("\\Z");
@@ -50,7 +50,7 @@ public class Compiler extends CompilerBase {
 		try {
 			scanner = new Scanner(file);
 		} catch (FileNotFoundException e) {
-			System.err.println("Can\'t open the file");
+			System.err.println("Can't open the file");
 			System.exit(1);
 		}
 		scanner.useDelimiter("\\Z");
@@ -59,7 +59,7 @@ public class Compiler extends CompilerBase {
 
 	public void initLexer(Lexer lexer) {
 		//Text
-		lexer.add("TXT", "\".*?(\")|\'.*?(\')");
+		lexer.add("TXT", "\".*?(\")|'.*?(')");
 		//Number
 		lexer.add("NUM", "\\d+\\.?\\d*");
 		//Boolean
@@ -72,7 +72,7 @@ public class Compiler extends CompilerBase {
 		lexer.add("PRINT", "print ");
 		//operators
 		lexer.add("SET", "=");
-		lexer.add("OP1", "\\*|\\/");
+		lexer.add("OP1", "\\*|\\/|%");
 		lexer.add("OP2", "\\-|\\+");
 		//if (keyword)
 		lexer.add("IF", "if ");
@@ -83,7 +83,7 @@ public class Compiler extends CompilerBase {
 		lexer.add("CL_BRACKET", "\\}");
 		//id
 		lexer.add("ID", "([A-Za-z]*\\d*_*)+");
-		//seperator
+		//separator
 		lexer.add("SEP", new SeperatorChecker());
 	}
 
@@ -127,9 +127,12 @@ public class Compiler extends CompilerBase {
 	}
 
 	@ParserEvent(map = "exp : exp OP1 exp", priority = 6)
-	public Object multiplicationAndDivision(Parser parser) {
+	public Object MultiplyAndDivideAndRemainder(Parser parser) {
 		if (parser.getTokens().get(1).getText().equals("*")) {
 			return new SyntaxTree.Mul((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+		}
+		if (parser.getTokens().get(1).getText().equals("%")) {
+			return new SyntaxTree.Mod((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 		}
 		return new SyntaxTree.Div((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
@@ -223,7 +226,7 @@ public class Compiler extends CompilerBase {
 					writer.write(vmTools.SyntaxTreeToVMByteCode((ProgramBase)result.getTokens().get(0).getObject()));
 					writer.close();
 				} catch (IOException e) {
-					System.out.println("ERROR: can\'t create output file");
+					System.out.println("ERROR: can't create output file");
 					e.printStackTrace();
 				}
 			} else {
