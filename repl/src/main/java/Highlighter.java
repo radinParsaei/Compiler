@@ -33,6 +33,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
                         break;
                     case "OP1":
                     case "OP2":
+                    case "COMP":
                     case "SET":
                         builder.styled(attributedStyle.foreground(AttributedStyle.MAGENTA), token.getText());
                         break;
