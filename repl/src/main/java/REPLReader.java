@@ -32,7 +32,7 @@ public class REPLReader {
         return input;
     }
 
-    public static String ltrim(String s) {
+    public static String leftTrim(String s) {
         int i = 0;
         while (i < s.length() && Character.isWhitespace(s.charAt(i))) {
             i++;
@@ -104,10 +104,10 @@ public class REPLReader {
             }
             if (line.startsWith("/")) {
                 if (line.startsWith("/p1") || line.startsWith("/prompt1")) {
-                    line = ltrim(line.replace("/p1", "").replace("/prompt1", ""));
+                    line = leftTrim(line.replace("/p1", "").replace("/prompt1", ""));
                     prompt1 = variablesParse(colorParse(line));
                 } else if (line.startsWith("/p2") || line.startsWith("/prompt2")) {
-                    line = ltrim(line.replace("/p2", "").replace("/prompt2", ""));
+                    line = leftTrim(line.replace("/p2", "").replace("/prompt2", ""));
                     prompt2 = variablesParse(colorParse(line));
                 } else if (line.startsWith("/colorhelp")) {
                     StringBuilder stirng = new StringBuilder();

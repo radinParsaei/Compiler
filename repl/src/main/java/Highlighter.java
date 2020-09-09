@@ -20,7 +20,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
         Lexer lexer = new Lexer(compiler);
         compiler.initLexer(lexer);
         lexer.setError(false);
-        for (Token token : lexer.lex(s)) {
+        for (Token token : lexer.lex(s.replace("\u200B", ""))) {
             if (colorConfigs == null) {
                 switch (token.getName()) {
                     case "TXT":
