@@ -5,6 +5,9 @@ import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -17,6 +20,10 @@ public class REPLReader {
     private static Terminal terminal = null;
     private static String previousLine = null;
     private static int openBracketCounter = 0;
+    private static String prompt1 = "> ";
+    private static String prompt2 = "";
+    private static BufferedReader bufferedReader;
+
     public static String colorParse(String input) {
         for (int i = 256; i >= 0; i--) {
             input = input.replace("@" + i, "\u001b[38;5;" + i + "m");
@@ -42,6 +49,11 @@ public class REPLReader {
 
     public static void init() {
         if (shellvars == null) {
+            try {
+                bufferedReader = new BufferedReader(new FileReader("./.Compilerrc"));
+            } catch (FileNotFoundException ignored) {
+
+            }
             terminal = null;
             try {
                 terminal = TerminalBuilder.terminal();
@@ -58,20 +70,18 @@ public class REPLReader {
     public static String readLine() {
         init();
         boolean hasIf = false;
-        Map<String, Completer> complesion = new HashMap<>();
+        Map<String, Completer> completion = new HashMap<>();
         String line = "";
-        String prompt1 = "> ";
-        String prompt2 = "";
         do {
-            complesion.put("SC", new StringsCompleter("/hist", "/help", "/colorhelp", "/prompt1", "/prompt2", "/run"));
-            complesion.put("SC1", new StringsCompleter("/prompt1", "/prompt2"));
-            complesion.put("SC1P", new StringsCompleter(shellvars));
-            complesion.put("C1", new StringsCompleter("print"));
-            complesion.put("ST", new StringsCompleter("if"));
-            complesion.put("OPBR", new StringsCompleter("{"));
-            complesion.put("CLBR", new StringsCompleter("}"));
-            complesion.put("CLBRP", new StringsCompleter("else"));
-            complesion.put("CLBRP2", new StringsCompleter("else if"));
+            completion.put("SC", new StringsCompleter("/hist", "/help", "/colorhelp", "/prompt1", "/prompt2", "/run"));
+            completion.put("SC1", new StringsCompleter("/prompt1", "/prompt2"));
+            completion.put("SC1P", new StringsCompleter(shellvars));
+            completion.put("C1", new StringsCompleter("print"));
+            completion.put("ST", new StringsCompleter("if"));
+            completion.put("OPBR", new StringsCompleter("{"));
+            completion.put("CLBR", new StringsCompleter("}"));
+            completion.put("CLBRP", new StringsCompleter("else"));
+            completion.put("CLBRP2", new StringsCompleter("else if"));
             String[] variables = new String[SyntaxTree.getVariables().size() + 3];
             int counter = 0;
             for (String variable : SyntaxTree.getVariables().keySet()) {
@@ -80,28 +90,31 @@ public class REPLReader {
             variables[counter++] = "null";
             variables[counter++] = "true";
             variables[counter] = "false";
-            complesion.put("vars", new StringsCompleter(variables));
+            completion.put("vars", new StringsCompleter(variables));
             DefaultParser parser = new DefaultParser();
             char[] nothing = new char[1];
             nothing[0] = '\u200B'; //It must to set and set to a hidden value (if anyone has a better idea help me at https://stackoverflow.com/questions/63757353/jline-problems-with-escape-character-in-completion)
             parser.setEscapeChars(nothing);
             LineReader lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
-                    .completer(new Completers.RegexCompleter("SC|SC1 SC1P|C1 vars|ST vars OPBR" + (openBracketCounter > 0? "|CLBR" + (hasIf? " (CLBRP OPBR|CLBRP2 vars OPBR)":""):""), complesion::get))
+                    .completer(new Completers.RegexCompleter("SC|SC1 SC1P|C1 vars|ST vars OPBR" + (openBracketCounter > 0? "|CLBR" + (hasIf? " (CLBRP OPBR|CLBRP2 vars OPBR)":""):""), completion::get))
                     .variable(LineReader.HISTORY_FILE, Paths.get("./.history"))
                     .appName("Compiler")
                     .parser(parser)
                     .highlighter(new Highlighter())
                     .build();
             try {
-                line = lineReader.readLine((openBracketCounter > 0? "... ":prompt1).replace("$DATE", new Date().toString()), prompt2.replace("$DATE", new Date().toString()), (Character) null, "").replace("else\u200B if", "else if");
+                if (bufferedReader == null || (line = bufferedReader.readLine()) == null) {
+                    bufferedReader = null;
+                    line = lineReader.readLine((openBracketCounter > 0 ? "... " : prompt1).replace("$DATE", new Date().toString()), prompt2.replace("$DATE", new Date().toString()), (Character) null, "").replace("else\u200B if", "else if");
+                }
             } catch (EndOfFileException e) {
                 throw new NoSuchElementException();
             } catch (UserInterruptException e) {
                 openBracketCounter = 0;
                 previousLine = null;
                 line = "";
-            }
+            } catch (IOException ignore) {}
             if (line.startsWith("/")) {
                 if (line.startsWith("/p1") || line.startsWith("/prompt1")) {
                     line = leftTrim(line.replace("/p1", "").replace("/prompt1", ""));
