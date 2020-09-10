@@ -59,7 +59,7 @@ public class Compiler extends CompilerBase {
 
 	public void initLexer(Lexer lexer) {
 		//Text
-		lexer.add("TXT", "\".*?(\")|'.*?(')");
+		lexer.add("TXT", new TextChecker());
 		//Number
 		lexer.add("NUM", "\\d+\\.?\\d*");
 		//Boolean
@@ -119,7 +119,20 @@ public class Compiler extends CompilerBase {
 	@ParserEvent(map = "exp : TXT", priority = 1)
 	public Object text(Parser parser) {
 		String text = parser.getTokens().get(0).getText();
-		return new SyntaxTree.Text(text.substring(1, text.length() - 1));
+		return new SyntaxTree.Text(text.substring(1, text.length() - 1)
+				.replace("\\n", "\n")
+				.replace("\\\n", "\\n")
+				.replace("\\t", "\t")
+				.replace("\\\t", "\\t")
+				.replace("\\r", "\r")
+				.replace("\\\r", "\\r")
+				.replace("\\b", "\b")
+				.replace("\\\b", "\\b")
+				.replace("\\f", "\f")
+				.replace("\\\f", "\\f")
+				.replace("\\'", "'")
+				.replace("\\\"", "\"")
+				.replace("\\\\", "\\"));
 	}
 
 	@ParserEvent(map = "exp : BOOL", priority = 2)

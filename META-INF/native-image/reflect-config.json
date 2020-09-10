@@ -1,7 +1,0 @@
-[
-{
-  "name":"Compiler",
-  "allDeclaredMethods":true,
-  "methods":[{"name":"syntaxError","parameterTypes":["int","java.lang.String"] }]
-}
-]
