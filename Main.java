@@ -12,7 +12,7 @@ public class Main extends CompilerMain {
 			fileName = "";
 		}
 		if (argParser.getItems().contains("hotreload") || argParser.getItems().contains("r")) {
-			if (fileName != "") {
+			if (!fileName.equals("")) {
 				hotReload = true;
 				if (argParser.getItems().contains("shell")) {
 					System.err.println("ERROR: shell and hot reload Interference");
@@ -55,12 +55,7 @@ public class Main extends CompilerMain {
 			if (argParser.getItems().contains("lex")) {
 				System.out.println(lex(compiler));
 			} else {
-				try {
-					compile(compiler);
-				} catch (IndexOutOfBoundsException e) {
-					System.out.println("Please enter file name");
-					System.exit(1);
-				}
+				compile(compiler);
 			}
 			if (hotReload) {
 				long lastModified, previousLastModified;

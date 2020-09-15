@@ -1,5 +1,24 @@
 classes=$(subst .java,, $(foreach java-source, $(wildcard *.java), $(java-source).class))
-all: submodule-VM output.jar
+
+ifeq ($(OS),Windows_NT)
+EXT:=dll
+NAME:=VM
+else
+NAME:=libVM
+UNAME := $(shell uname -s)
+ifeq ($(UNAME),Linux)
+EXT:=so
+endif
+ifeq ($(UNAME),Darwin)
+EXT=dylib
+endif
+endif
+
+all: submodule-VM output.jar $(NAME).$(EXT)
+
+$(NAME).$(EXT):
+	$(MAKE) -C CompilerBackend $(NAME).$(EXT)
+	cp CompilerBackend/$(NAME).$(EXT) .
 
 output.jar: $(classes)
 	echo Manifest-Version: 1.0 > manifest.txt

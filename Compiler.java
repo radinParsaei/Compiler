@@ -1,5 +1,8 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,6 +13,45 @@ public class Compiler extends CompilerBase {
 	private final boolean isShell;
 	private final String compiledFileName;
 	private final String serializeFileName;
+
+	private SyntaxTree.Programs addNameSpaces(String nameSpace, ProgramBase program, ArrayList<String> declaredVariables) {
+		if (declaredVariables == null) {
+			declaredVariables = new ArrayList<>();
+		}
+		if (program instanceof SyntaxTree.SetVariable) {
+			declaredVariables.add(((SyntaxTree.SetVariable)program).getVariableName());
+			((SyntaxTree.SetVariable)program).setVariableName(nameSpace + ":" +
+					((SyntaxTree.SetVariable)program).getVariableName());
+		} else if (program instanceof SyntaxTree.Programs) {
+			for (ProgramBase program2 : ((SyntaxTree.Programs)program).getPrograms()) {
+				addNameSpaces(nameSpace, program2, declaredVariables);
+			}
+		} else {
+			Field[] fields = program.getClass().getDeclaredFields();
+			for (Field field : fields) {
+				field.setAccessible(true);
+				try {
+					if (field.get(program) instanceof SyntaxTree.Variable) {
+						SyntaxTree.Variable tmp = (SyntaxTree.Variable) field.get(program);
+						if (declaredVariables.contains(tmp.getVariableName())) {
+							tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
+						}
+					} else if (field.get(program) instanceof ValueBase[]) {
+						ValueBase[] values = (ValueBase[]) field.get(program);
+						for (ValueBase value : values) {
+							if (value instanceof SyntaxTree.Variable) {
+								SyntaxTree.Variable tmp = (SyntaxTree.Variable) value;
+								if (declaredVariables.contains(tmp.getVariableName())) {
+									tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
+								}
+							}
+						}
+					}
+				} catch (IllegalAccessException ignore) {}
+			}
+		}
+		return new SyntaxTree.Programs(program);
+	}
 
 	public Compiler(String fileName, boolean isShell, String compiledFileName, String serializeFileName) {
 		this.fileName = fileName;
@@ -67,7 +109,7 @@ public class Compiler extends CompilerBase {
 		//Null
 		lexer.add("NULL", "null");
 		//spaces (ignore)
-		lexer.add("IGNORE", " +");
+		lexer.add("IGNORE", "(\t| )+");
 		//print
 		lexer.add("PRINT", "print ");
 		//operators
@@ -79,9 +121,15 @@ public class Compiler extends CompilerBase {
 		lexer.add("IF", "if ");
 		//else (keyword)
 		lexer.add("ELSE", "else");
+		//func (keyword)
+		lexer.add("FN", "func ");
 		//brackets
 		lexer.add("OP_BRACKET", "\\{");
 		lexer.add("CL_BRACKET", "\\}");
+		//parentheses
+		lexer.add("OP_PAREN", "\\(");
+		lexer.add("CL_PAREN", "\\)");
+		lexer.add("COMMA", ",");
 		//id
 		lexer.add("ID", "([A-Za-z]*\\d*_*)+");
 		//separator
@@ -93,7 +141,7 @@ public class Compiler extends CompilerBase {
 	public void parse(Parser parser) {
 		if (getCounter() == 0) {
 			parser.on("SEP SEP", "SEP", (parser1) -> null);
-		} else if (getCounter() == 5) {
+		} else if (getCounter() == 8) {
 			for (int i = 0; i < parser.getTokens().size(); i++) {
 				if (parser.getTokens().get(i).getName().equals("OP2")
 						&& !parser.getTokens().get(i - 1).getName().equals("exp")) {
@@ -108,6 +156,10 @@ public class Compiler extends CompilerBase {
 					parser.getTokens().add(i, token);
 				}
 			}
+		} else if (getCounter() == 5 || getCounter() == 14) {
+			parser.setSingleRunPerLocation(false);
+		} else if (getCounter() == 6 || getCounter() == 15) {
+			parser.setSingleRunPerLocation(true);
 		}
 	}
 
@@ -150,12 +202,34 @@ public class Compiler extends CompilerBase {
 		return parser.getTokens().get(0).getText();
 	}
 
-	@ParserEvent(map = "exp : ID", priority = 5)
+	@ParserEvent(map = "fn : FN ID OP_PAREN ID|FN ID OP_PAREN", priority = 5)
+	public Object function(Parser parser) {
+		ArrayList<String> stringArrayList = new ArrayList<>();
+		stringArrayList.add(parser.getTokens().get(1).getText());
+		if (parser.getTokens().size() == 4) {
+			stringArrayList.add(parser.getTokens().get(3).getText());
+		}
+		return stringArrayList;
+	}
+
+	@ParserEvent(map = "fn : fn COMMA ID", priority = 6)
+	public Object function2(Parser parser) {
+		ArrayList<String> stringArrayList = (ArrayList<String>) parser.getTokens().get(0).getObject();
+		stringArrayList.add(parser.getTokens().get(2).getText());
+		return stringArrayList;
+	}
+
+	@ParserEvent(map = "fnc : ID OP_PAREN", priority = 7)
+	public Object functionCall(Parser parser) {
+		return parser.getTokens().get(0).getText();
+	}
+
+	@ParserEvent(map = "exp : ID", priority = 8)
 	public Object variable(Parser parser) {
 		return new SyntaxTree.Variable(parser.getTokens().get(0).getText());
 	}
 
-	@ParserEvent(map = "exp : exp OP1 exp", priority = 6)
+	@ParserEvent(map = "exp : exp OP1 exp", priority = 9)
 	public Object multiplyAndDivideAndRemainder(Parser parser) {
 		if (parser.getTokens().get(1).getText().equals("*")) {
 			return new SyntaxTree.Mul((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
@@ -166,7 +240,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Div((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp OP2 exp", priority = 7)
+	@ParserEvent(map = "exp : exp OP2 exp", priority = 10)
 	public Object additionAndSubtraction(Parser parser) {
 		if (parser.getTokens().get(1).getText().equals("+")) {
 			return new SyntaxTree.Add((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
@@ -174,7 +248,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Sub((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp COMP exp", priority = 8)
+	@ParserEvent(map = "exp : exp COMP exp", priority = 11)
 	public Object comparison(Parser parser) {
 		if (parser.getTokens().get(1).getText().equals("==")) {
 			return new SyntaxTree.Equals((ValueBase)parser.getTokens().get(0).getObject(),
@@ -188,31 +262,48 @@ public class Compiler extends CompilerBase {
 		}
 	}
 
-	@ParserEvent(map = "program : set exp SEP", priority = 9)
+	@ParserEvent(map = "program : set exp SEP", priority = 12)
 	public Object setVariable(Parser parser) {
 		return new SyntaxTree.SetVariable((String)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "program : PRINT exp SEP", priority = 10)
+	@ParserEvent(map = "program : PRINT exp SEP", priority = 13)
 	public Object print(Parser parser) {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "program : program program", priority = 11)
+	@ParserEvent(map = "fnc : fnc exp|fnc", priority = 14)
+	public Object functionCall2(Parser parser) {
+		ArrayList<ValueBase> arrayList = new ArrayList<>();
+		arrayList.add(new SyntaxTree.Text(parser.getTokens().get(0).getObject().toString()));
+		if (parser.getTokens().size() == 2) {
+			arrayList.add((ValueBase) parser.getTokens().get(1).getObject());
+		}
+		return arrayList;
+	}
+
+	@ParserEvent(map = "fnc : fnc COMMA exp", priority = 15)
+	public Object functionCall3(Parser parser) {
+		ArrayList<ValueBase> arrayList = (ArrayList<ValueBase>) parser.getTokens().get(0).getObject();
+		arrayList.add((ValueBase) parser.getTokens().get(2).getObject());
+		return arrayList;
+	}
+
+	@ParserEvent(map = "program : program program", priority = 16)
 	public Object programs(Parser parser) {
 		return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "ifprogram : IF exp OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET SEP program CL_BRACKET|IF exp OP_BRACKET SEP program CL_BRACKET", priority = 12)
+	@ParserEvent(map = "ifprogram : IF exp OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET SEP program CL_BRACKET|IF exp OP_BRACKET SEP program CL_BRACKET", priority = 17)
 	public Object _if(Parser parser) {
-		setCounter(11);
+		setCounter(16);
 		parser.remove("SEP");
 		return new SyntaxTree.If((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
 	}
 
-	@ParserEvent(map = "ifprogram : ifprogram ELSE ifprogram|ifprogram SEP ELSE ifprogram", priority = 13)
+	@ParserEvent(map = "ifprogram : ifprogram ELSE ifprogram|ifprogram SEP ELSE ifprogram", priority = 18)
 	public Object elseif(Parser parser) {
-		setCounter(11);
+		setCounter(16);
 		parser.remove("SEP");
 		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
 		SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
@@ -223,9 +314,9 @@ public class Compiler extends CompilerBase {
 		return tmp2;
 	}
 
-	@ParserEvent(map = "program : ifprogram ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram ELSE SEP OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET SEP program CL_BRACKET SEP|ifprogram SEP ELSE SEP OP_BRACKET SEP program CL_BRACKET SEP|ifprogram ELSE OP_BRACKET SEP program CL_BRACKET SEP", priority = 14)
+	@ParserEvent(map = "program : ifprogram ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram ELSE SEP OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET SEP program CL_BRACKET SEP|ifprogram SEP ELSE SEP OP_BRACKET SEP program CL_BRACKET SEP|ifprogram ELSE OP_BRACKET SEP program CL_BRACKET SEP", priority = 19)
 	public Object _else(Parser parser) {
-		setCounter(11);
+		setCounter(16);
 		parser.remove("SEP");
 		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
 		SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
@@ -236,10 +327,59 @@ public class Compiler extends CompilerBase {
 		return tmp2;
 	}
 
-	@ParserEvent(map = "program : ifprogram SEP", priority = 15)
+	@ParserEvent(map = "program : ifprogram SEP", priority = 20)
 	public Object ifToProgram(Parser parser) {
-		setCounter(11);
+		setCounter(16);
 		return parser.getTokens().get(0).getObject();
+	}
+
+	@ParserEvent(map = "program : fn CL_PAREN OP_BRACKET program CL_BRACKET SEP|fn CL_PAREN SEP OP_BRACKET program CL_BRACKET SEP|fn CL_PAREN OP_BRACKET SEP program CL_BRACKET SEP|fn CL_PAREN SEP OP_BRACKET SEP program CL_BRACKET SEP", priority = 21)
+	public Object funcDeclaration(Parser parser) {
+		setCounter(16);
+		parser.remove("SEP");
+		ArrayList<String> stringArrayList = (ArrayList<String>)parser.getTokens().get(0).getObject();
+		String tmp = stringArrayList.get(0);
+		StringBuilder functionName = new StringBuilder(tmp + ":");
+		stringArrayList.remove(0);
+		for (String string : stringArrayList) {
+			functionName.append(",").append(string);
+		}
+		return new SyntaxTree.Function(functionName.toString(),
+				addNameSpaces("FN" + fileName + tmp,
+						(ProgramBase)parser.getTokens().get(3).getObject(),
+						stringArrayList));
+	}
+
+	@ParserEvent(map = "program : fnc CL_PAREN SEP", priority = 22)
+	public Object functionCall4(Parser parser) {
+		setCounter(16);
+		ArrayList<ValueBase> arrayList = (ArrayList<ValueBase>) parser.getTokens().get(0).getObject();
+		String functionName = arrayList.get(0).getData().toString();
+		String functionName2 = null;
+		arrayList.remove(0);
+		ProgramBase[] programs = new ProgramBase[arrayList.size() + 1];
+		ArrayList<String> params = new ArrayList<>();
+		for (Map.Entry<String, ProgramBase> entry : SyntaxTree.getFunctions().entrySet()) {
+			if (entry.getKey().split(":")[0].equals(functionName)) {
+				functionName2 = entry.getKey();
+				if (entry.getKey().split(":").length > 1) {
+					for (String string : entry.getKey().split(":")[1].split(",")) {
+						if (string.equals("")) continue;
+						params.add(string);
+					}
+				}
+			}
+		}
+		if (params.size() != arrayList.size()) {
+			syntaxError("not enough arguments for function " + functionName);
+		}
+		int i = 0;
+		for (ValueBase value : arrayList) {
+			programs[i] = addNameSpaces("FN" + fileName + functionName,
+					new SyntaxTree.SetVariable(params.get(i++), value), null);
+		}
+		programs[i] = new SyntaxTree.CallFunction(functionName2);
+		return new SyntaxTree.Programs(programs);
 	}
 
 	public void afterParse(Parser result) {

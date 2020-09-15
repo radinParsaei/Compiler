@@ -10,3 +10,8 @@ repl/out
 **/.idea/tasks.xml
 .history
 .DS_Store
+.Compilerrc
+.colors
+libVM.dylib
+VM.dll
+libVM.so

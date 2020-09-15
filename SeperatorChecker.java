@@ -1,10 +1,7 @@
 public class SeperatorChecker extends StringCheckerBase {
 	@Override
 	public boolean check(String data) {
-		if (data.startsWith("\n") || data.startsWith(";")) {
-			return true;
-		}
-		return false;
+		return data.startsWith("\n") || data.startsWith(";");
 	}
 
 	@Override
