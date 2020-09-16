@@ -113,7 +113,7 @@ public class Compiler extends CompilerBase {
 		//print
 		lexer.add("PRINT", "print ");
 		//operators
-		lexer.add("COMP", "==|<|>");
+		lexer.add("COMP", "<=|>=|==|<|>");
 		lexer.add("SET", "=");
 		lexer.add("OP1", "\\*|\\/|%");
 		lexer.add("OP2", "\\-|\\+");
@@ -250,15 +250,23 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : exp COMP exp", priority = 11)
 	public Object comparison(Parser parser) {
-		if (parser.getTokens().get(1).getText().equals("==")) {
-			return new SyntaxTree.Equals((ValueBase)parser.getTokens().get(0).getObject(),
-					(ValueBase)parser.getTokens().get(2).getObject());
-		} else if (parser.getTokens().get(1).getText().equals(">")) {
-			return new SyntaxTree.GreaterThan((ValueBase)parser.getTokens().get(0).getObject(),
-					(ValueBase)parser.getTokens().get(2).getObject());
-		} else {
-			return new SyntaxTree.LesserThan((ValueBase)parser.getTokens().get(0).getObject(),
-					(ValueBase)parser.getTokens().get(2).getObject());
+		switch (parser.getTokens().get(1).getText()) {
+			case "==":
+				return new SyntaxTree.Equals((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject());
+			case ">":
+				return new SyntaxTree.GreaterThan((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject());
+			case "<":
+				return new SyntaxTree.LesserThan((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject());
+			case "<=":
+				return new SyntaxTree.LesserThanOrEqual((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject());
+//			case ">=":
+			default:
+				return new SyntaxTree.GreaterThanOrEqual((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject());
 		}
 	}
 
