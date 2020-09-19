@@ -14,6 +14,33 @@ public class Compiler extends CompilerBase {
 	private final String compiledFileName;
 	private final String serializeFileName;
 
+	private void addNameSpacesOnObject(String nameSpace, Object object, ArrayList<String> declaredVariables) {
+		Field[] fields = object.getClass().getDeclaredFields();
+		for (Field field : fields) {
+			field.setAccessible(true);
+			try {
+				if (field.get(object) instanceof SyntaxTree.Variable) {
+					SyntaxTree.Variable tmp = (SyntaxTree.Variable) field.get(object);
+					if (declaredVariables.contains(tmp.getVariableName()) && !tmp.getVariableName().startsWith(nameSpace + ":")) {
+						tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
+					}
+				} else if (field.get(object) instanceof ValueBase[]) {
+					ValueBase[] values = (ValueBase[]) field.get(object);
+					for (ValueBase value : values) {
+						if (value instanceof SyntaxTree.Variable) {
+							SyntaxTree.Variable tmp = (SyntaxTree.Variable) value;
+							if (declaredVariables.contains(tmp.getVariableName()) && !tmp.getVariableName().startsWith(nameSpace + ":")) {
+								tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
+							}
+						}
+					}
+				} else if (field.get(object) instanceof ValueBase) {
+					addNameSpacesOnObject(nameSpace, field.get(object), declaredVariables);
+				}
+			} catch (IllegalAccessException ignore) {}
+		}
+	}
+
 	private SyntaxTree.Programs addNameSpaces(String nameSpace, ProgramBase program, ArrayList<String> declaredVariables) {
 		if (declaredVariables == null) {
 			declaredVariables = new ArrayList<>();
@@ -22,33 +49,20 @@ public class Compiler extends CompilerBase {
 			declaredVariables.add(((SyntaxTree.SetVariable)program).getVariableName());
 			((SyntaxTree.SetVariable)program).setVariableName(nameSpace + ":" +
 					((SyntaxTree.SetVariable)program).getVariableName());
+			if (((SyntaxTree.SetVariable)program).getVariableValue() instanceof SyntaxTree.Variable) {
+				SyntaxTree.Variable tmp = (SyntaxTree.Variable) ((SyntaxTree.SetVariable)program).getVariableValue();
+				if (declaredVariables.contains(tmp.getVariableName())) {
+					tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
+				}
+			} else {
+				addNameSpacesOnObject(nameSpace, ((SyntaxTree.SetVariable)program).getVariableValue(), declaredVariables);
+			}
 		} else if (program instanceof SyntaxTree.Programs) {
 			for (ProgramBase program2 : ((SyntaxTree.Programs)program).getPrograms()) {
 				addNameSpaces(nameSpace, program2, declaredVariables);
 			}
 		} else {
-			Field[] fields = program.getClass().getDeclaredFields();
-			for (Field field : fields) {
-				field.setAccessible(true);
-				try {
-					if (field.get(program) instanceof SyntaxTree.Variable) {
-						SyntaxTree.Variable tmp = (SyntaxTree.Variable) field.get(program);
-						if (declaredVariables.contains(tmp.getVariableName())) {
-							tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
-						}
-					} else if (field.get(program) instanceof ValueBase[]) {
-						ValueBase[] values = (ValueBase[]) field.get(program);
-						for (ValueBase value : values) {
-							if (value instanceof SyntaxTree.Variable) {
-								SyntaxTree.Variable tmp = (SyntaxTree.Variable) value;
-								if (declaredVariables.contains(tmp.getVariableName())) {
-									tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
-								}
-							}
-						}
-					}
-				} catch (IllegalAccessException ignore) {}
-			}
+			addNameSpacesOnObject(nameSpace, program, declaredVariables);
 		}
 		return new SyntaxTree.Programs(program);
 	}
@@ -289,7 +303,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "fnc : fnc exp|fnc", priority = 14)
+	@ParserEvent(map = "fnc : fnc exp", priority = 14)
 	public Object functionCall2(Parser parser) {
 		ArrayList<ValueBase> arrayList = new ArrayList<>();
 		arrayList.add(new SyntaxTree.Text(parser.getTokens().get(0).getObject().toString()));
@@ -306,8 +320,9 @@ public class Compiler extends CompilerBase {
 		return arrayList;
 	}
 
-	@ParserEvent(map = "program : program program", priority = 16)
+	@ParserEvent(map = "program : program program|program SEP program", priority = 16)
 	public Object programs(Parser parser) {
+		parser.remove("SEP");
 		return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
 	}
 
@@ -350,27 +365,28 @@ public class Compiler extends CompilerBase {
 		return parser.getTokens().get(0).getObject();
 	}
 
-	@ParserEvent(map = "program : fn CL_PAREN OP_BRACKET program CL_BRACKET SEP|fn CL_PAREN SEP OP_BRACKET program CL_BRACKET SEP|fn CL_PAREN OP_BRACKET SEP program CL_BRACKET SEP|fn CL_PAREN SEP OP_BRACKET SEP program CL_BRACKET SEP", priority = 21)
+	@ParserEvent(map = "fnd : fn CL_PAREN OP_BRACKET|fn CL_PAREN SEP OP_BRACKET", priority = 21)
 	public Object funcDeclaration(Parser parser) {
-		setCounter(16);
-		parser.remove("SEP");
 		ArrayList<String> stringArrayList = (ArrayList<String>)parser.getTokens().get(0).getObject();
-		String tmp = stringArrayList.get(0);
-		StringBuilder functionName = new StringBuilder(tmp + ":");
-		stringArrayList.remove(0);
-		for (String string : stringArrayList) {
-			functionName.append(",").append(string);
+		StringBuilder functionName = new StringBuilder(stringArrayList.get(0) + ":");
+		for (int i = 1; i < stringArrayList.size(); i++) {
+			functionName.append(",").append(stringArrayList.get(i));
 		}
-		return new SyntaxTree.Function(functionName.toString(),
-				addNameSpaces("FN" + fileName + tmp,
-						(ProgramBase)parser.getTokens().get(3).getObject(),
-						stringArrayList));
+		SyntaxTree.getFunctions().put(functionName.toString(), null);
+		return parser.getTokens().get(0).getObject();
 	}
 
 	@ParserEvent(map = "program : fnc CL_PAREN SEP", priority = 22)
 	public Object functionCall4(Parser parser) {
 		setCounter(16);
-		ArrayList<ValueBase> arrayList = (ArrayList<ValueBase>) parser.getTokens().get(0).getObject();
+		ArrayList<ValueBase> arrayList;
+		Object tmp = parser.getTokens().get(0).getObject();
+		if (tmp instanceof ArrayList) {
+			arrayList = (ArrayList<ValueBase>) tmp;
+		} else {
+			arrayList = new ArrayList<>();
+			arrayList.add(new SyntaxTree.Text(tmp.toString()));
+		}
 		String functionName = arrayList.get(0).getData().toString();
 		String functionName2 = null;
 		arrayList.remove(0);
@@ -399,7 +415,27 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Programs(programs);
 	}
 
+	@ParserEvent(map = "program : fnd SEP program CL_BRACKET SEP|fnd program CL_BRACKET SEP", priority = 23)
+	public Object funcDeclaration1(Parser parser) {
+		setCounter(16);
+		parser.remove("SEP");
+		ArrayList<String> stringArrayList = (ArrayList<String>)parser.getTokens().get(0).getObject();
+		String tmp = stringArrayList.get(0);
+		StringBuilder functionName = new StringBuilder(tmp + ":");
+		stringArrayList.remove(0);
+		for (String string : stringArrayList) {
+			functionName.append(",").append(string);
+		}
+		return new SyntaxTree.Function(functionName.toString(),
+				addNameSpaces("FN" + fileName + tmp,
+						(ProgramBase)parser.getTokens().get(1).getObject(),
+						stringArrayList));
+	}
+
 	public void afterParse(Parser result) {
+		result.on("program program|program SEP program", "program", (parser) ->
+				new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(),
+						(ProgramBase)parser.getTokens().get(1).getObject()));
 		result.remove("SEP");
 		if (result.getTokens().size() == 0) {
 			return ;
