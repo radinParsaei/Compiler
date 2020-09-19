@@ -113,7 +113,7 @@ public class Compiler extends CompilerBase {
 		//print
 		lexer.add("PRINT", "print ");
 		//operators
-		lexer.add("COMP", "!=|<=|>=|==|<|>");
+		lexer.add("COMP", "!==|===|!=|<=|>=|==|<|>");
 		lexer.add("SET", "=");
 		lexer.add("OP1", "\\*|\\/|%");
 		lexer.add("OP2", "\\-|\\+");
@@ -265,6 +265,12 @@ public class Compiler extends CompilerBase {
 						(ValueBase) parser.getTokens().get(2).getObject());
 			case "!=":
 				return new SyntaxTree.Not(new SyntaxTree.Equals((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject()));
+			case "===":
+				return new SyntaxTree.StrictEquals((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject());
+			case "!==":
+				return new SyntaxTree.Not(new SyntaxTree.StrictEquals((ValueBase) parser.getTokens().get(0).getObject(),
 						(ValueBase) parser.getTokens().get(2).getObject()));
 //			case ">=":
 			default:
