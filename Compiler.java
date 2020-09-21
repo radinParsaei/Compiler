@@ -185,7 +185,7 @@ public class Compiler extends CompilerBase {
 	@ParserEvent(map = "exp : TXT", priority = 1)
 	public Object text(Parser parser) {
 		String text = parser.getTokens().get(0).getText();
-		return new SyntaxTree.Text(text.substring(1, text.length() - 1)
+		String string = text.substring(1, text.length() - 1)
 				.replace("\\n", "\n")
 				.replace("\\\n", "\\n")
 				.replace("\\t", "\t")
@@ -198,7 +198,18 @@ public class Compiler extends CompilerBase {
 				.replace("\\\f", "\\f")
 				.replace("\\'", "'")
 				.replace("\\\"", "\"")
-				.replace("\\\\", "\\"));
+				.replace("\\\\", "\\");
+		if (string.contains("\\u")) {
+			for (int i = 0xFFFF; i >= 0; i--) {
+				StringBuilder tmp = new StringBuilder("\\u");
+				tmp.append(Integer.toHexString(i));
+				for (byte j = (byte) (4 - (tmp.length() - 2)); j > 0; j--) {
+					tmp.insert(2, "0");
+				}
+				string = string.replace(tmp, Character.toString((char) i));
+			}
+		}
+		return new SyntaxTree.Text(string);
 	}
 
 	@ParserEvent(map = "exp : BOOL", priority = 2)
