@@ -123,7 +123,7 @@ public class Compiler extends CompilerBase {
 		//Null
 		lexer.add("NULL", "null");
 		//spaces (ignore)
-		lexer.add("IGNORE", "(\t| )+");
+		lexer.add("IGNORE", "(\t| |\\/\\/.*|\\/\\*.*\\*\\/)+");
 		//print
 		lexer.add("PRINT", "print ");
 		//operators
