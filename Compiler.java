@@ -131,6 +131,7 @@ public class Compiler extends CompilerBase {
 		lexer.add("SET", "=");
 		lexer.add("OP1", "\\*|\\/|%");
 		lexer.add("OP2", "\\-|\\+");
+		lexer.add("OP3", "&");
 		//if (keyword)
 		lexer.add("IF", "if ");
 		//else (keyword)
@@ -170,9 +171,9 @@ public class Compiler extends CompilerBase {
 					parser.getTokens().add(i, token);
 				}
 			}
-		} else if (getCounter() == 5 || getCounter() == 14) {
+		} else if (getCounter() == 5 || getCounter() == 15) {
 			parser.setSingleRunPerLocation(false);
-		} else if (getCounter() == 6 || getCounter() == 15) {
+		} else if (getCounter() == 6 || getCounter() == 16) {
 			parser.setSingleRunPerLocation(true);
 		}
 	}
@@ -273,7 +274,14 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Sub((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp COMP exp", priority = 11)
+	@ParserEvent(map = "exp : exp OP3 exp", priority = 11)
+	public Object bitwiseAnd(Parser parser) {
+//		if (parser.getTokens().get(1).getText().equals("&")) {
+		return new SyntaxTree.BitwiseAnd((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+//		}
+	}
+
+	@ParserEvent(map = "exp : exp COMP exp", priority = 12)
 	public Object comparison(Parser parser) {
 		switch (parser.getTokens().get(1).getText()) {
 			case "==":
@@ -304,17 +312,17 @@ public class Compiler extends CompilerBase {
 		}
 	}
 
-	@ParserEvent(map = "program : set exp SEP", priority = 12)
+	@ParserEvent(map = "program : set exp SEP", priority = 13)
 	public Object setVariable(Parser parser) {
 		return new SyntaxTree.SetVariable((String)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "program : PRINT exp SEP", priority = 13)
+	@ParserEvent(map = "program : PRINT exp SEP", priority = 14)
 	public Object print(Parser parser) {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "fnc : fnc exp", priority = 14)
+	@ParserEvent(map = "fnc : fnc exp", priority = 15)
 	public Object functionCall2(Parser parser) {
 		ArrayList<ValueBase> arrayList = new ArrayList<>();
 		arrayList.add(new SyntaxTree.Text(parser.getTokens().get(0).getObject().toString()));
@@ -324,27 +332,27 @@ public class Compiler extends CompilerBase {
 		return arrayList;
 	}
 
-	@ParserEvent(map = "fnc : fnc COMMA exp", priority = 15)
+	@ParserEvent(map = "fnc : fnc COMMA exp", priority = 16)
 	public Object functionCall3(Parser parser) {
 		ArrayList<ValueBase> arrayList = (ArrayList<ValueBase>) parser.getTokens().get(0).getObject();
 		arrayList.add((ValueBase) parser.getTokens().get(2).getObject());
 		return arrayList;
 	}
 
-	@ParserEvent(map = "program : program program|program SEP program", priority = 16)
+	@ParserEvent(map = "program : program program|program SEP program", priority = 17)
 	public Object programs(Parser parser) {
 		parser.remove("SEP");
 		return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "ifprogram : IF exp OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET SEP program CL_BRACKET|IF exp OP_BRACKET SEP program CL_BRACKET", priority = 17)
+	@ParserEvent(map = "ifprogram : IF exp OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET SEP program CL_BRACKET|IF exp OP_BRACKET SEP program CL_BRACKET", priority = 18)
 	public Object _if(Parser parser) {
 		setCounter(16);
 		parser.remove("SEP");
 		return new SyntaxTree.If((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
 	}
 
-	@ParserEvent(map = "ifprogram : ifprogram ELSE ifprogram|ifprogram SEP ELSE ifprogram", priority = 18)
+	@ParserEvent(map = "ifprogram : ifprogram ELSE ifprogram|ifprogram SEP ELSE ifprogram", priority = 19)
 	public Object elseif(Parser parser) {
 		setCounter(16);
 		parser.remove("SEP");
@@ -357,7 +365,7 @@ public class Compiler extends CompilerBase {
 		return tmp2;
 	}
 
-	@ParserEvent(map = "program : ifprogram ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram ELSE SEP OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET SEP program CL_BRACKET SEP|ifprogram SEP ELSE SEP OP_BRACKET SEP program CL_BRACKET SEP|ifprogram ELSE OP_BRACKET SEP program CL_BRACKET SEP", priority = 19)
+	@ParserEvent(map = "program : ifprogram ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram ELSE SEP OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET SEP program CL_BRACKET SEP|ifprogram SEP ELSE SEP OP_BRACKET SEP program CL_BRACKET SEP|ifprogram ELSE OP_BRACKET SEP program CL_BRACKET SEP", priority = 20)
 	public Object _else(Parser parser) {
 		setCounter(16);
 		parser.remove("SEP");
@@ -370,13 +378,13 @@ public class Compiler extends CompilerBase {
 		return tmp2;
 	}
 
-	@ParserEvent(map = "program : ifprogram SEP", priority = 20)
+	@ParserEvent(map = "program : ifprogram SEP", priority = 21)
 	public Object ifToProgram(Parser parser) {
 		setCounter(16);
 		return parser.getTokens().get(0).getObject();
 	}
 
-	@ParserEvent(map = "fnd : fn CL_PAREN OP_BRACKET|fn CL_PAREN SEP OP_BRACKET", priority = 21)
+	@ParserEvent(map = "fnd : fn CL_PAREN OP_BRACKET|fn CL_PAREN SEP OP_BRACKET", priority = 22)
 	public Object funcDeclaration(Parser parser) {
 		ArrayList<String> stringArrayList = (ArrayList<String>)parser.getTokens().get(0).getObject();
 		StringBuilder functionName = new StringBuilder(stringArrayList.get(0) + ":");
@@ -387,7 +395,7 @@ public class Compiler extends CompilerBase {
 		return parser.getTokens().get(0).getObject();
 	}
 
-	@ParserEvent(map = "program : fnc CL_PAREN SEP", priority = 22)
+	@ParserEvent(map = "program : fnc CL_PAREN SEP", priority = 23)
 	public Object functionCall4(Parser parser) {
 		setCounter(16);
 		ArrayList<ValueBase> arrayList;
@@ -426,7 +434,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Programs(programs);
 	}
 
-	@ParserEvent(map = "program : fnd SEP program CL_BRACKET SEP|fnd program CL_BRACKET SEP", priority = 23)
+	@ParserEvent(map = "program : fnd SEP program CL_BRACKET SEP|fnd program CL_BRACKET SEP", priority = 24)
 	public Object funcDeclaration1(Parser parser) {
 		setCounter(16);
 		parser.remove("SEP");
