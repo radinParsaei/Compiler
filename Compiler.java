@@ -131,7 +131,7 @@ public class Compiler extends CompilerBase {
 		lexer.add("SET", "=");
 		lexer.add("OP1", "\\*|\\/|%");
 		lexer.add("OP2", "\\-|\\+");
-		lexer.add("OP3", "&");
+		lexer.add("OP3", "&|\\|");
 		//if (keyword)
 		lexer.add("IF", "if ");
 		//else (keyword)
@@ -276,9 +276,11 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : exp OP3 exp", priority = 11)
 	public Object bitwiseAnd(Parser parser) {
-//		if (parser.getTokens().get(1).getText().equals("&")) {
-		return new SyntaxTree.BitwiseAnd((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
-//		}
+		if (parser.getTokens().get(1).getText().equals("&")) {
+			return new SyntaxTree.BitwiseAnd((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+		} else {
+			return new SyntaxTree.BitwiseOr((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
+		}
 	}
 
 	@ParserEvent(map = "exp : exp COMP exp", priority = 12)
