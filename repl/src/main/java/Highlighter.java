@@ -33,6 +33,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
                         break;
                     case "OP1":
                     case "OP2":
+                    case "OP3":
                     case "COMP":
                     case "SET":
                         builder.styled(attributedStyle.foreground(AttributedStyle.MAGENTA), token.getText());
@@ -41,6 +42,10 @@ public class Highlighter implements org.jline.reader.Highlighter {
                     case "IF":
                     case "ELSE":
                         builder.styled(attributedStyle.foreground(140), token.getText());
+                        break;
+                    case "IGNORE":
+                        if (token.getText().startsWith("//") || token.getText().startsWith("/*"))
+                            builder.styled(attributedStyle.foreground(242), token.getText());
                         break;
                     default:
                         builder.styled(AttributedStyle.DEFAULT, token.getText());
