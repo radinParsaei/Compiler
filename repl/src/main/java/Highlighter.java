@@ -46,6 +46,8 @@ public class Highlighter implements org.jline.reader.Highlighter {
                     case "IGNORE":
                         if (token.getText().startsWith("//") || token.getText().startsWith("/*"))
                             builder.styled(attributedStyle.foreground(242), token.getText());
+                        else
+                            builder.styled(AttributedStyle.DEFAULT, token.getText());
                         break;
                     default:
                         builder.styled(AttributedStyle.DEFAULT, token.getText());

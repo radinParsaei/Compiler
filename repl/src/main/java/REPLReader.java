@@ -138,7 +138,7 @@ public class REPLReader {
                     System.out.println("/prompt1 | /p1 -> set prompt 1 (left side) (@ for setting foreground color number and # for background color number)");
                     System.out.println("/prompt2 | /p2 -> set prompt 1 (right side)");
                     System.out.println("/help -> prints this help");
-                } else if (line.startsWith("/run")) {
+                } else {
                     return line;
                 }
                 return "";
