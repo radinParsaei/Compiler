@@ -404,6 +404,9 @@ public class Compiler extends CompilerBase {
 		for (int i = 1; i < stringArrayList.size(); i++) {
 			functionName.append(",").append(stringArrayList.get(i));
 		}
+		if (SyntaxTree.getFunctions().containsKey(functionName.toString())) {
+			Errors.error(ErrorCodes.ERROR_FUNCTION_REDECLARATION, functionName.toString());
+		}
 		SyntaxTree.getFunctions().put(functionName.toString(), null);
 		return parser.getTokens().get(0).getObject();
 	}
@@ -461,7 +464,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Function(functionName.toString(),
 				addNameSpaces("FN" + fileName + tmp,
 						(ProgramBase)parser.getTokens().get(1).getObject(),
-						stringArrayList));
+						stringArrayList), false);
 	}
 
 	public void afterParse(Parser result) {
