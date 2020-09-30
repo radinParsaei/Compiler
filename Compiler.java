@@ -348,22 +348,26 @@ public class Compiler extends CompilerBase {
 		return arrayList;
 	}
 
-	@ParserEvent(map = "program : program program|program SEP program", priority = 17)
+	@ParserEvent(map = "program : program (SEP )?(program ?)+", priority = 17)
 	public Object programs(Parser parser) {
 		parser.remove("SEP");
-		return new SyntaxTree.Programs((ProgramBase)parser.getTokens().get(0).getObject(), (ProgramBase)parser.getTokens().get(1).getObject());
+		ProgramBase[] programs = new ProgramBase[parser.getTokens().size()];
+		for (int i = 0; i < programs.length; i++) {
+			programs[i] = (ProgramBase) parser.getTokens().get(i).getObject();
+		}
+		return new SyntaxTree.Programs(programs);
 	}
 
-	@ParserEvent(map = "ifprogram : IF exp OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET program CL_BRACKET|IF exp SEP OP_BRACKET SEP program CL_BRACKET|IF exp OP_BRACKET SEP program CL_BRACKET", priority = 18)
+	@ParserEvent(map = "ifprogram : IF exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET", priority = 18)
 	public Object _if(Parser parser) {
-		setCounter(16);
+		setCounter(17);
 		parser.remove("SEP");
 		return new SyntaxTree.If((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
 	}
 
-	@ParserEvent(map = "ifprogram : ifprogram ELSE ifprogram|ifprogram SEP ELSE ifprogram", priority = 19)
+	@ParserEvent(map = "ifprogram : ifprogram (SEP )?ELSE ifprogram", priority = 19)
 	public Object elseif(Parser parser) {
-		setCounter(16);
+		setCounter(17);
 		parser.remove("SEP");
 		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
 		SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
@@ -374,9 +378,9 @@ public class Compiler extends CompilerBase {
 		return tmp2;
 	}
 
-	@ParserEvent(map = "program : ifprogram ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET program CL_BRACKET SEP|ifprogram ELSE SEP OP_BRACKET program CL_BRACKET SEP|ifprogram SEP ELSE OP_BRACKET SEP program CL_BRACKET SEP|ifprogram SEP ELSE SEP OP_BRACKET SEP program CL_BRACKET SEP|ifprogram ELSE OP_BRACKET SEP program CL_BRACKET SEP", priority = 20)
+	@ParserEvent(map = "program : ifprogram (SEP )?ELSE (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", priority = 20)
 	public Object _else(Parser parser) {
-		setCounter(16);
+		setCounter(17);
 		parser.remove("SEP");
 		SyntaxTree.If tmp = (SyntaxTree.If)parser.getTokens().get(0).getObject();
 		SyntaxTree.If tmp2 = (SyntaxTree.If)parser.getTokens().get(0).getObject();
@@ -389,11 +393,11 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "program : ifprogram SEP", priority = 21)
 	public Object ifToProgram(Parser parser) {
-		setCounter(16);
+		setCounter(17);
 		return parser.getTokens().get(0).getObject();
 	}
 
-	@ParserEvent(map = "fnd : fn CL_PAREN OP_BRACKET|fn CL_PAREN SEP OP_BRACKET", priority = 22)
+	@ParserEvent(map = "fnd : fn CL_PAREN (SEP )?OP_BRACKET", priority = 22)
 	public Object funcDeclaration(Parser parser) {
 		ArrayList<String> stringArrayList = (ArrayList<String>)parser.getTokens().get(0).getObject();
 		StringBuilder functionName = new StringBuilder(stringArrayList.get(0) + ":");
@@ -406,7 +410,7 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "program : fnc CL_PAREN SEP", priority = 23)
 	public Object functionCall4(Parser parser) {
-		setCounter(16);
+		setCounter(17);
 		ArrayList<ValueBase> arrayList;
 		Object tmp = parser.getTokens().get(0).getObject();
 		if (tmp instanceof ArrayList) {
@@ -443,9 +447,9 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Programs(programs);
 	}
 
-	@ParserEvent(map = "program : fnd SEP program CL_BRACKET SEP|fnd program CL_BRACKET SEP", priority = 24)
+	@ParserEvent(map = "program : fnd (SEP )?program CL_BRACKET SEP", priority = 24)
 	public Object funcDeclaration1(Parser parser) {
-		setCounter(16);
+		setCounter(17);
 		parser.remove("SEP");
 		ArrayList<String> stringArrayList = (ArrayList<String>)parser.getTokens().get(0).getObject();
 		String tmp = stringArrayList.get(0);
