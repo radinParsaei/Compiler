@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
@@ -14,59 +13,118 @@ public class Compiler extends CompilerBase {
 	private final String compiledFileName;
 	private final String serializeFileName;
 
-	private void addNameSpacesOnObject(String nameSpace, Object object, ArrayList<String> declaredVariables) {
-		Field[] fields = object.getClass().getDeclaredFields();
-		for (Field field : fields) {
-			field.setAccessible(true);
-			try {
-				if (field.get(object) instanceof SyntaxTree.Variable) {
-					SyntaxTree.Variable tmp = (SyntaxTree.Variable) field.get(object);
-					if (declaredVariables.contains(tmp.getVariableName()) && !tmp.getVariableName().startsWith(nameSpace + ":")) {
-						tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
-					}
-				} else if (field.get(object) instanceof ValueBase[]) {
-					ValueBase[] values = (ValueBase[]) field.get(object);
-					for (ValueBase value : values) {
-						if (value instanceof SyntaxTree.Variable) {
-							SyntaxTree.Variable tmp = (SyntaxTree.Variable) value;
-							if (declaredVariables.contains(tmp.getVariableName()) && !tmp.getVariableName().startsWith(nameSpace + ":")) {
-								tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
-							}
-						} else {
-							addNameSpacesOnObject(nameSpace, value, declaredVariables);
-						}
-					}
-				} else if (field.get(object) instanceof ValueBase) {
-					addNameSpacesOnObject(nameSpace, field.get(object), declaredVariables);
-				}
-			} catch (IllegalAccessException ignore) {}
-		}
-	}
-
 	private SyntaxTree.Programs addNameSpaces(String nameSpace, ProgramBase program, ArrayList<String> declaredVariables) {
 		if (declaredVariables == null) {
 			declaredVariables = new ArrayList<>();
 		}
-		if (program instanceof SyntaxTree.SetVariable && ((SyntaxTree.SetVariable) program).getIsDeclaration()) {
-			declaredVariables.add(((SyntaxTree.SetVariable)program).getVariableName());
-			((SyntaxTree.SetVariable)program).setVariableName(nameSpace + ":" +
-					((SyntaxTree.SetVariable)program).getVariableName());
-			if (((SyntaxTree.SetVariable)program).getVariableValue() instanceof SyntaxTree.Variable) {
-				SyntaxTree.Variable tmp = (SyntaxTree.Variable) ((SyntaxTree.SetVariable)program).getVariableValue();
+		if (program instanceof SyntaxTree.SetVariable) {
+			if (((SyntaxTree.SetVariable) program).getIsDeclaration()) {
+				declaredVariables.add(((SyntaxTree.SetVariable) program).getVariableName());
+				((SyntaxTree.SetVariable) program).setVariableName(nameSpace + ":" +
+						((SyntaxTree.SetVariable) program).getVariableName());
+			} else {
+				if (declaredVariables.contains(((SyntaxTree.SetVariable) program).getVariableName())) {
+					((SyntaxTree.SetVariable) program).setVariableName(nameSpace + ":" + ((SyntaxTree.SetVariable) program).getVariableName());
+				}
+			}
+			if (((SyntaxTree.SetVariable) program).getVariableValue() instanceof SyntaxTree.Variable) {
+				SyntaxTree.Variable tmp = (SyntaxTree.Variable) ((SyntaxTree.SetVariable) program).getVariableValue();
 				if (declaredVariables.contains(tmp.getVariableName())) {
 					tmp.setVariableName(nameSpace + ":" + tmp.getVariableName());
 				}
 			} else {
-				addNameSpacesOnObject(nameSpace, ((SyntaxTree.SetVariable)program).getVariableValue(), declaredVariables);
+				addNameSpacesOnValue(nameSpace, ((SyntaxTree.SetVariable) program).getVariableValue(), declaredVariables);
 			}
 		} else if (program instanceof SyntaxTree.Programs) {
 			for (ProgramBase program2 : ((SyntaxTree.Programs)program).getPrograms()) {
 				addNameSpaces(nameSpace, program2, declaredVariables);
 			}
-		} else {
-			addNameSpacesOnObject(nameSpace, program, declaredVariables);
+		} else if (program instanceof SyntaxTree.If) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.If)program).getCondition(), declaredVariables);
+		} else if (program instanceof SyntaxTree.While) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.While)program).getCondition(), declaredVariables);
+		} else if (program instanceof SyntaxTree.Repeat) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Repeat)program).getCount(), declaredVariables);
+		} else if (program instanceof SyntaxTree.Exit) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Exit)program).getStatus(), declaredVariables);
+		} else if (program instanceof SyntaxTree.Print) {
+			for (ValueBase value : ((SyntaxTree.Print)program).getArgs()) {
+				addNameSpacesOnValue(nameSpace, value, declaredVariables);
+			}
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Print)program).getSeparator(), declaredVariables);
 		}
 		return new SyntaxTree.Programs(program);
+	}
+
+	private void addNameSpacesOnValue(String nameSpace, ValueBase value, ArrayList<String> declaredVariables) {
+		if (declaredVariables == null || declaredVariables.size() == 0) {
+			return;
+		}
+		if (value instanceof SyntaxTree.Variable) {
+			if (declaredVariables.contains(((SyntaxTree.Variable) value).getVariableName())) {
+				((SyntaxTree.Variable) value).setVariableName(nameSpace + ":" + ((SyntaxTree.Variable) value).getVariableName());
+			}
+		} else if (value instanceof SyntaxTree.Add) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Add) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Add) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Sub) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Sub) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Sub) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Mul) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Mul) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Mul) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Div) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Div) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Div) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Mod) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Mod) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Mod) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Equals) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Equals) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Equals) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.StrictEquals) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.StrictEquals) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.StrictEquals) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.GreaterThan) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.GreaterThan) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.GreaterThan) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.GreaterThanOrEqual) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.GreaterThanOrEqual) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.GreaterThanOrEqual) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.LesserThan) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.LesserThan) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.LesserThan) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.LesserThanOrEqual) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.LesserThanOrEqual) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.LesserThanOrEqual) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Or) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Or) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Or) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.BitwiseOr) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.BitwiseOr) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.BitwiseOr) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.And) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.And) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.And) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.BitwiseAnd) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.BitwiseAnd) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.BitwiseAnd) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.LeftShift) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.LeftShift) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.LeftShift) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.RightShift) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.RightShift) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.RightShift) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Xor) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Xor) value).getV1(), declaredVariables);
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Xor) value).getV2(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Negative) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Negative) value).getValue(), declaredVariables);
+		} else if (value instanceof SyntaxTree.Not) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.Not) value).getValue(), declaredVariables);
+		} else if (value instanceof SyntaxTree.BitwiseNot) {
+			addNameSpacesOnValue(nameSpace, ((SyntaxTree.BitwiseNot) value).getValue(), declaredVariables);
+		}
 	}
 
 	public Compiler(String fileName, boolean isShell, String compiledFileName, String serializeFileName) {
@@ -284,23 +342,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Sub((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp OP3 exp", priority = 12)
-	public Object bitwiseAnd(Parser parser) {
-		switch (parser.getTokens().get(1).getText()) {
-			case "&":
-				return new SyntaxTree.BitwiseAnd((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
-			case "and":
-			case "&&":
-				return new SyntaxTree.And((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
-			case "or":
-			case "||":
-				return new SyntaxTree.Or((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
-			default:
-				return new SyntaxTree.BitwiseOr((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
-		}
-	}
-
-	@ParserEvent(map = "exp : exp COMP exp", priority = 13)
+	@ParserEvent(map = "exp : exp COMP exp", priority = 12)
 	public Object comparison(Parser parser) {
 		switch (parser.getTokens().get(1).getText()) {
 			case "==":
@@ -328,6 +370,22 @@ public class Compiler extends CompilerBase {
 			default:
 				return new SyntaxTree.GreaterThanOrEqual((ValueBase) parser.getTokens().get(0).getObject(),
 						(ValueBase) parser.getTokens().get(2).getObject());
+		}
+	}
+
+	@ParserEvent(map = "exp : exp OP3 exp", priority = 13)
+	public Object bitwiseAnd(Parser parser) {
+		switch (parser.getTokens().get(1).getText()) {
+			case "&":
+				return new SyntaxTree.BitwiseAnd((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
+			case "and":
+			case "&&":
+				return new SyntaxTree.And((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
+			case "or":
+			case "||":
+				return new SyntaxTree.Or((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
+			default:
+				return new SyntaxTree.BitwiseOr((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
 		}
 	}
 
@@ -481,7 +539,6 @@ public class Compiler extends CompilerBase {
 		for (String string : stringArrayList) {
 			functionName.append(",").append(string);
 		}
-		System.out.println(stringArrayList);
 		return new SyntaxTree.Function(functionName.toString(),
 				addNameSpaces("FN" + fileName + tmp,
 						(ProgramBase)parser.getTokens().get(1).getObject(),
