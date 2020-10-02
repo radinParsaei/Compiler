@@ -41,6 +41,8 @@ public class Highlighter implements org.jline.reader.Highlighter {
                     case "PRINT":
                     case "IF":
                     case "ELSE":
+                    case "FN":
+                    case "VAR":
                         builder.styled(attributedStyle.foreground(140), token.getText());
                         break;
                     case "IGNORE":
