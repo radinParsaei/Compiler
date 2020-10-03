@@ -295,12 +295,14 @@ public class Compiler extends CompilerBase {
 		return parser.getTokens().get(1).getText();
 	}
 
-	@ParserEvent(map = "fn : FN ID OP_PAREN( vard)?", priority = 6)
+	@ParserEvent(map = "fn : FN ID OP_PAREN( vard| ID)?", priority = 6)
 	public Object function(Parser parser) {
 		ArrayList<String> stringArrayList = new ArrayList<>();
 		stringArrayList.add(parser.getTokens().get(1).getText());
-		if (parser.getTokens().size() == 4) {
+		if (parser.getTokens().size() == 4 && parser.getTokens().get(3).getName().equals("vard")) {
 			stringArrayList.add((String) parser.getTokens().get(3).getObject());
+		} else {
+			stringArrayList.add(parser.getTokens().get(3).getText());
 		}
 		return stringArrayList;
 	}
