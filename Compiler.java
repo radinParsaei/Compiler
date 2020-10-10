@@ -89,7 +89,7 @@ public class Compiler extends CompilerBase {
 		//var (keyword)
 		lexer.add("VAR", "var ");
 		//return (keyword)
-		lexer.add("RET", "return ");
+		lexer.add("RET", "return");
 		//brackets
 		lexer.add("OP_BRACKET", "\\{");
 		lexer.add("CL_BRACKET", "\\}");
@@ -304,8 +304,11 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "program : RET exp SEP", priority = 16)
+	@ParserEvent(map = "program : RET (exp )?SEP", priority = 16)
 	public Object _return(Parser parser) {
+		if (parser.getTokens().size() == 2) {
+			return new SyntaxTree.Return(new SyntaxTree.Null());
+		}
 		return new SyntaxTree.Return((ValueBase) parser.getTokens().get(1).getObject());
 	}
 
