@@ -455,7 +455,7 @@ public class Compiler extends CompilerBase {
 				try {
 					FileWriter writer = new FileWriter(compiledFileName);
 					VMTools vmTools = new VMTools();
-					writer.write(vmTools.SyntaxTreeToVMByteCode((ProgramBase)result.getTokens().get(0).getObject()));
+					writer.write(vmTools.syntaxTreeToVMByteCode((ProgramBase)result.getTokens().get(0).getObject()));
 					writer.close();
 				} catch (IOException e) {
 					System.out.println("ERROR: can't create output file");
