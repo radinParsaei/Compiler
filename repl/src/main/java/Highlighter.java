@@ -16,7 +16,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
         init();
         AttributedStyle attributedStyle = new AttributedStyle();
         AttributedStringBuilder builder = new AttributedStringBuilder();
-        Compiler compiler = new Compiler(null, false, null, null);
+        Compiler compiler = new Compiler(null, false, null, null, null);
         Lexer lexer = new Lexer(compiler);
         compiler.initLexer(lexer);
         lexer.setError(false);

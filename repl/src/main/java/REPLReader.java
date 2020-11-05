@@ -143,7 +143,7 @@ public class REPLReader {
                 }
                 return "";
             }
-            Compiler compiler = new Compiler(null, false, null, null);
+            Compiler compiler = new Compiler(null, false, null, null, null);
             Lexer lexer = new Lexer(compiler);
             compiler.initLexer(lexer);
             lexer.setError(false);

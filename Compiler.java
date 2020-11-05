@@ -1,9 +1,6 @@
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.math.BigDecimal;
 
 public class Compiler extends CompilerBase {
@@ -12,12 +9,14 @@ public class Compiler extends CompilerBase {
 	private boolean isCodeRunning = false;
 	private final String compiledFileName;
 	private final String serializeFileName;
+	private final String classFileName;
 
-	public Compiler(String fileName, boolean isShell, String compiledFileName, String serializeFileName) {
+	public Compiler(String fileName, boolean isShell, String compiledFileName, String classFileName, String serializeFileName) {
 		this.fileName = fileName;
 		this.isShell = isShell;
 		this.compiledFileName = compiledFileName;
 		this.serializeFileName = serializeFileName;
+		this.classFileName = classFileName;
 	}
 
 	public String getInputCode() {
@@ -451,17 +450,32 @@ public class Compiler extends CompilerBase {
 				SyntaxTreeSerializer serializer = new SyntaxTreeSerializer();
 				serializer.serialize(serializeFileName, (ProgramBase)result.getTokens().get(0).getObject());
 			}
+			boolean compiled = false;
+			if (classFileName != null) {
+				compiled = true;
+				try {
+					JVMTool jvmTool = new JVMTool();
+					byte[] out = jvmTool.syntaxTreeToJVMClass((ProgramBase) result.getTokens().get(0).getObject(), classFileName);
+					FileOutputStream fileOutputStream = new FileOutputStream(classFileName + ".class");
+					fileOutputStream.write(out);
+					fileOutputStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			if (compiledFileName != null) {
+				compiled = true;
 				try {
 					FileWriter writer = new FileWriter(compiledFileName);
 					VMTools vmTools = new VMTools();
-					writer.write(vmTools.syntaxTreeToVMByteCode((ProgramBase)result.getTokens().get(0).getObject()));
+					writer.write(vmTools.syntaxTreeToVMByteCode((ProgramBase) result.getTokens().get(0).getObject()));
 					writer.close();
 				} catch (IOException e) {
 					System.out.println("ERROR: can't create output file");
 					e.printStackTrace();
 				}
-			} else {
+			}
+			if (!compiled) {
 				((ProgramBase)result.getTokens().get(0).getObject()).eval();
 			}
 		} else {

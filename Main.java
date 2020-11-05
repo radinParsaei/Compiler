@@ -28,6 +28,7 @@ public class Main extends CompilerMain {
 			System.exit(0);
 		}
 		String outputFileName = argParser.getValues().get("output");
+		String classFileName = argParser.getValues().get("class-output");
 		String serializeFileName = argParser.getValues().get("serialize");
 		if (serializeFileName != null && !serializeFileName.endsWith(".ser")) {
 			serializeFileName += ".ser";
@@ -50,7 +51,7 @@ public class Main extends CompilerMain {
 			}
 			System.out.println();
 		}
-		Compiler compiler = new Compiler(fileName, argParser.getItems().contains("shell"), outputFileName, serializeFileName);
+		Compiler compiler = new Compiler(fileName, argParser.getItems().contains("shell"), outputFileName, (classFileName != null? classFileName.split("\\.")[0]:null), serializeFileName);
 		do {
 			if (argParser.getItems().contains("lex")) {
 				System.out.println(lex(compiler));
