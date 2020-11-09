@@ -30,34 +30,40 @@ public class Compiler extends CompilerBase {
 					}
 					System.out.println("Running " + fileName);
 					System.out.println();
-					File file = new File(fileName);
-					Scanner scanner = null;
-					try {
-						scanner = new Scanner(file);
-					} catch (FileNotFoundException e) {
-						System.err.println("Can't open the file");
-						return "";
+					if (!Targets.isWeb) {
+						File file = new File(fileName);
+						Scanner scanner = null;
+						try {
+							scanner = new Scanner(file);
+						} catch (FileNotFoundException e) {
+							System.err.println("Can't open the file");
+							return "";
+						}
+						scanner.useDelimiter("\\Z");
+						isShell = false;
+						isCodeRunning = true;
+						return scanner.next() + "\n";
 					}
-					scanner.useDelimiter("\\Z");
-					isShell = false;
-					isCodeRunning = true;
-					return scanner.next() + "\n";
 				}
 				return line + "\n";
 			} catch (java.util.NoSuchElementException e) {
-				System.exit(0);
+				if (!Targets.isWeb) System.exit(0);
 			}
 		}
-		File file = new File(fileName);
-		Scanner scanner = null;
-		try {
-			scanner = new Scanner(file);
-		} catch (FileNotFoundException e) {
-			System.err.println("Can't open the file");
-			System.exit(1);
+		if (!Targets.isWeb) {
+			File file = new File(fileName);
+			Scanner scanner = null;
+			try {
+				scanner = new Scanner(file);
+			} catch (FileNotFoundException e) {
+				System.err.println("Can't open the file");
+				System.exit(1);
+			}
+			scanner.useDelimiter("\\Z");
+			return scanner.next() + "\n";
+		} else {
+			return "";
 		}
-		scanner.useDelimiter("\\Z");
-		return scanner.next() + "\n";
 	}
 
 	public void initLexer(Lexer lexer) {
@@ -107,27 +113,32 @@ public class Compiler extends CompilerBase {
 	public void afterLex(Parser result) {}
 
 	public void parse(Parser parser) {
-		if (getCounter() == 0) {
-			parser.on("SEP SEP", "SEP", (parser1) -> null);
-		} else if (getCounter() == 9) {
-			for (int i = 0; i < parser.getTokens().size(); i++) {
-				if (parser.getTokens().get(i).getName().equals("OP2")
-						&& !parser.getTokens().get(i - 1).getName().equals("exp")) {
-					ValueBase value = (ValueBase) parser.getTokens().get(i + 1).getObject();
-					if (parser.getTokens().get(i).getText().equals("-")) {
-						value = new SyntaxTree.Negative(value);
+		if (!Targets.isWeb) {
+			if (getCounter() == 0) {
+				parser.on("SEP SEP", "SEP", (parser1) -> null);
+			} else if (getCounter() == 9) {
+				for (int i = 0; i < parser.getTokens().size(); i++) {
+					if (parser.getTokens().get(i).getName().equals("OP2")
+							&& !parser.getTokens().get(i - 1).getName().equals("exp")) {
+						ValueBase value = (ValueBase) parser.getTokens().get(i + 1).getObject();
+						if (parser.getTokens().get(i).getText().equals("-")) {
+							value = new SyntaxTree.Negative(value);
+						}
+						parser.getTokens().remove(i);
+						parser.getTokens().remove(i);
+						Token token = new Token("exp", null);
+						token.setObject(value);
+						parser.getTokens().add(i, token);
 					}
-					parser.getTokens().remove(i);
-					parser.getTokens().remove(i);
-					Token token = new Token("exp", null);
-					token.setObject(value);
-					parser.getTokens().add(i, token);
 				}
+			} else if (getCounter() == 6 || getCounter() == 16) {
+				parser.setSingleRunPerLocation(false);
+			} else if (getCounter() == 7 || getCounter() == 17) {
+				parser.setSingleRunPerLocation(true);
 			}
-		} else if (getCounter() == 6 || getCounter() == 16) {
-			parser.setSingleRunPerLocation(false);
-		} else if (getCounter() == 7 || getCounter() == 17) {
-			parser.setSingleRunPerLocation(true);
+		}
+		if (Targets.isWeb) {
+			Web.parse(parser, this);
 		}
 	}
 
@@ -446,9 +457,11 @@ public class Compiler extends CompilerBase {
 			return ;
 		}
 		if (result.getTokens().get(0).getName().equals("program")) {
-			if (serializeFileName != null) {
-				SyntaxTreeSerializer serializer = new SyntaxTreeSerializer();
-				serializer.serialize(serializeFileName, (ProgramBase)result.getTokens().get(0).getObject());
+			if (!Targets.isWeb) {
+				if (serializeFileName != null) {
+					SyntaxTreeSerializer serializer = new SyntaxTreeSerializer();
+					serializer.serialize(serializeFileName, (ProgramBase) result.getTokens().get(0).getObject());
+				}
 			}
 			boolean compiled = false;
 			if (classFileName != null) {
@@ -477,6 +490,7 @@ public class Compiler extends CompilerBase {
 			}
 			if (!compiled) {
 				((ProgramBase)result.getTokens().get(0).getObject()).eval();
+				if (Targets.isWeb) System.out.println("\nCode Running Done");
 			}
 		} else {
 			System.out.println("Syntax is:\n" + result);

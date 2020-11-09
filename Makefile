@@ -14,7 +14,7 @@ EXT=dylib
 endif
 endif
 
-all: submodule-VM output.jar $(NAME).$(EXT)
+all: output.jar $(NAME).$(EXT)
 
 $(NAME).$(EXT):
 	$(MAKE) -C CompilerBackend $(NAME).$(EXT)
@@ -25,8 +25,9 @@ output.jar: $(classes)
 	echo Main-Class: Main >> manifest.txt
 	jar cvfm output.jar manifest.txt *.class
 	$(RM) manifest.txt
+
 %.class: %.java
-	javac $<
+	javac -source 1.8 -XDignore.symbol.file=true $<
 
 ifeq ($(USE_GMP_LIB),1)
 submodule-VM:
@@ -40,7 +41,7 @@ clean-classes:
 	$(RM) -r *.class output.jar META-INF output
 
 clean: clean-classes
-	$(MAKE) -C CompilerBackend/VM clean
+	$(MAKE) -C CompilerBackend/VM -f Makefile.old clean
 
 native-image: INF
 	native-image 2>&1 >/dev/null && echo native-image installed! || (echo native-image not found && exit 1)
