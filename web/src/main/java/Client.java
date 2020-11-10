@@ -1,15 +1,11 @@
-import org.teavm.jso.JSBody;
-import org.teavm.jso.browser.Window;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
-import org.teavm.jso.dom.html.HTMLDocument;
-import org.teavm.jso.dom.html.HTMLElement;
+import org.teavm.jso.dom.html.*;
 
 public class Client extends CompilerMain {
     public static void main(String[] args) {
         HTMLDocument document = HTMLDocument.current();
-        HTMLElement button = document.createElement("button");
-        button.appendChild(document.createTextNode("Run!"));
+        HTMLElement button = document.getElementById("run");
         button.addEventListener("click", new EventListener<Event>() {
             @Override
             public void handleEvent(Event evt) {
@@ -20,6 +16,53 @@ public class Client extends CompilerMain {
                 compile(compiler);
             }
         });
-        document.getBody().appendChild(button);
+
+        HTMLElement buttonTmp = document.getElementById("callColor");
+        buttonTmp.addEventListener("click", new EventListener<Event>() {
+            @Override
+            public void handleEvent(Event evt) {
+                color();
+            }
+        });
+        color();
+    }
+
+    public static void color() {
+        HTMLDocument document = HTMLDocument.current();
+        String text = REPLReader.readLine();
+        Compiler compiler = new Compiler(null, false, null, null, null);
+        Lexer lexer = new Lexer(compiler);
+        compiler.initLexer(lexer);
+        lexer.setError(false);
+        StringBuilder coloredText = new StringBuilder();
+        for (Token token : lexer.lex(text)) {
+            switch (token.getName()) {
+                case "TXT":
+                    coloredText.append("<font color=\"#7B986A\">").append(token.getText()).append("</font>");
+                    break;
+                case "NUM":
+                    coloredText.append("<font color=\"#6897BB\">").append(token.getText()).append("</font>");
+                    break;
+                case "PRINT":
+                case "IF":
+                case "ELSE":
+                case "FN":
+                case "VAR":
+                case "BOOL":
+                case "NULL":
+                    coloredText.append("<font color=\"#dc8842\">").append(token.getText()).append("</font>");
+                    break;
+                case "IGNORE":
+                    if (token.getText().trim().startsWith("//") || token.getText().trim().startsWith("/*"))
+                        coloredText.append("<font color=\"#808080\">").append(token.getText()).append("</font>");
+                    else
+                        coloredText.append(token.getText());
+                    break;
+                default:
+                    coloredText.append(token.getText());
+                    break;
+            }
+        }
+        document.getElementById("editor").setInnerHTML(coloredText.toString());
     }
 }
