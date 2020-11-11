@@ -1,0 +1,1 @@
+../web/target/web-1.0-SNAPSHOT/teavm/classes.js

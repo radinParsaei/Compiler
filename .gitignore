@@ -15,3 +15,14 @@ repl/out
 libVM.dylib
 VM.dll
 libVM.so
+web/target/classes/
+web/target/generated/
+web/target/generated-sources
+web/target/maven-archiver
+web/target/maven-status
+web/target/web-1.0-SNAPSHOT.war
+web/target/web-1.0-SNAPSHOT/META-INF
+web/target/web-1.0-SNAPSHOT/WEB-INF
+web/target/web-1.0-SNAPSHOT/teavm/src
+web/target/web-1.0-SNAPSHOT/teavm/classes.js.map
+web/target/web-1.0-SNAPSHOT/teavm/classes.js.teavmdbg
