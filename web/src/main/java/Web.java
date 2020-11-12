@@ -16,6 +16,7 @@ public class Web {
             if (compiler.getCounter() == 7) parser.on("fn COMMA (ID|vard)", "fn", compiler::function2);
             if (compiler.getCounter() == 8) parser.on("ID OP_PAREN", "fnc", compiler::functionCall);
             if (compiler.getCounter() == 9) {
+                parser.on("ID", "exp", compiler::variable);
                 for (int i = 0; i < parser.getTokens().size(); i++) {
                     if (parser.getTokens().get(i).getName().equals("OP2")
                             && !parser.getTokens().get(i - 1).getName().equals("exp")) {
@@ -30,7 +31,6 @@ public class Web {
                         parser.getTokens().add(i, token);
                     }
                 }
-                parser.on("ID", "exp", compiler::variable);
             }
             if (compiler.getCounter() == 10) parser.on("exp OP1 exp", "exp", compiler::multiplyAndDivideAndRemainder);
             if (compiler.getCounter() == 11) parser.on("exp OP2 exp", "exp", compiler::additionAndSubtraction);
