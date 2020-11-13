@@ -91,9 +91,22 @@
         }
 
         main {
-            height: calc(100% - 79px);
+            height: calc(100% - 229px);
             margin: 20px;
             margin-top: 5px;
+            margin-bottom: 0;
+        }
+
+        #console {
+            height: 140px;
+            margin-top: 12px !important;
+            margin: 20px;
+            overflow-y: scroll;
+        }
+
+        #console2 {
+            height: 100px;
+            overflow-y: scroll;
         }
     </style>
 </head>
@@ -103,6 +116,10 @@
     <main>
         <div id="editor" class="editor dark"></div>
     </main>
+    <div id="console" class="editor dark">
+        <h4 style="color: gray;">OUTPUT</h4>
+        <div id="console2"></div>
+    </div>
 <script type="module">
       import {CodeJar} from 'https://medv.io/codejar/codejar.js'
       //import {withLineNumbers} from 'https://medv.io/codejar/linenumbers.js';
@@ -140,6 +157,8 @@
         document.getElementById("chtheme").classList.toggle('light');
         document.getElementById("run").classList.toggle('dark');
         document.getElementById("run").classList.toggle('light');
+        document.getElementById("console").classList.toggle('dark');
+        document.getElementById("console").classList.toggle('light');
         document.getElementById("pageBody").classList.toggle('darkBack');
       }
 

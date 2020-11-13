@@ -12,6 +12,7 @@ public class Client extends CompilerMain {
                 SyntaxTree.getFunctions().clear();
                 SyntaxTree.getVariables().clear();
                 SyntaxTree.getClassesParameters().clear();
+                document.getElementById("console2").setInnerHTML("");
                 Compiler compiler = new Compiler(null, true, null, null, null);
                 compile(compiler);
             }
@@ -30,6 +31,8 @@ public class Client extends CompilerMain {
     public static void color() {
         HTMLDocument document = HTMLDocument.current();
         String text = REPLReader.readLine();
+        text = text.replace("<", "&lt;");
+        text = text.replace(">", "&gt;");
         Compiler compiler = new Compiler(null, false, null, null, null);
         Lexer lexer = new Lexer(compiler);
         compiler.initLexer(lexer);
@@ -50,6 +53,8 @@ public class Client extends CompilerMain {
                 case "VAR":
                 case "BOOL":
                 case "NULL":
+                case "RET":
+                case "WH":
                     coloredText.append("<font color=\"#dc8842\">").append(token.getText()).append("</font>");
                     break;
                 case "IGNORE":

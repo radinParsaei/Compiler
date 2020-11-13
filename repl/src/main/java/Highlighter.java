@@ -27,6 +27,8 @@ public class Highlighter implements org.jline.reader.Highlighter {
                         builder.styled(attributedStyle.foreground(2), token.getText());
                         break;
                     case "NUM":
+                        builder.styled(attributedStyle.foreground(AttributedStyle.BLUE), token.getText());
+                        break;
                     case "BOOL":
                     case "NULL":
                         builder.styled(attributedStyle.foreground(215), token.getText());
@@ -43,6 +45,8 @@ public class Highlighter implements org.jline.reader.Highlighter {
                     case "ELSE":
                     case "FN":
                     case "VAR":
+                    case "RET":
+                    case "WH":
                         builder.styled(attributedStyle.foreground(140), token.getText());
                         break;
                     case "IGNORE":
