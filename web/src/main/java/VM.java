@@ -1,52 +1,31 @@
+import org.teavm.jso.JSBody;
+
 import java.math.BigDecimal;
 
 public class VM {
-//	static {
-//		System.loadLibrary("VM");
-//	}
-//	public VM() {
-//		init();
-//	}
-//	private native void runWithString(byte opcode, String data);
-//	private native void runWithDouble(byte opcode, String data);
-//	private native void runWithBoolean(byte opcode, boolean data);
-//	private native String disassembleWithString(byte opcode, String data);
-//	private native String disassembleWithDouble(byte opcode, String data);
-//	private native String disassembleWithBoolean(byte opcode, boolean data);
-//	public native String pop();
-//	private native void init();
-//	public native void run(byte opcode);
-//	public void run(byte opcode, BigDecimal data) {
-//		runWithDouble(opcode, data + "");
-//	}
-//	public void run(byte opcode, String data) {
-//		runWithString(opcode, data);
-//	}
-//	public void run(byte opcode, boolean data) {
-//		runWithBoolean(opcode, data);
-//	}
-//	public String disassemble(byte opcode, BigDecimal data) {
-//		return disassembleWithDouble(opcode, data + "");
-//	}
-//	public String disassemble(byte opcode) {
-//		return disassembleWithString(opcode, null);
-//	}
-//	public String disassemble(byte opcode, String data) {
-//		return disassembleWithString(opcode, data);
-//	}
-//	public String disassemble(byte opcode, boolean data) {
-//		return disassembleWithBoolean(opcode, data);
-//	}
+	@JSBody(params = {"opcode", "data"}, script = "Module.ccall('runWithString', null, [\"number\", \"string\"], [opcode, data]);")
+	private static native void runWithString(byte opcode, String data);
 
-	private void runWithString(byte opcode, String data) {}
-	private void runWithDouble(byte opcode, String data) {}
-	private void runWithBoolean(byte opcode, boolean data) {}
-	private String disassembleWithString(byte opcode, String data) { return null; }
-	private String disassembleWithDouble(byte opcode, String data) { return null; }
-	private String disassembleWithBoolean(byte opcode, boolean data) { return null; }
-	public String pop() { return null; }
-	private native void init();
-	public void run(byte opcode) {}
+	@JSBody(params = {"opcode", "data"}, script = "Module.ccall('runWithNumber', null, [\"number\", \"string\"], [opcode, data]);")
+	private static native void runWithDouble(byte opcode, String data);
+
+	@JSBody(params = {"opcode", "data"}, script = "Module.ccall('runWithBool', null, [\"number\", \"boolean\"], [opcode, data]);")
+	private static native void runWithBoolean(byte opcode, boolean data);
+
+	@JSBody(params = {"opcode", "data"}, script = "return Module.ccall('disassembleWithString', 'string', [\"number\", \"string\"], [opcode, data]);")
+	private static native String disassembleWithString(byte opcode, String data);
+
+	@JSBody(params = {"opcode", "data"}, script = "return Module.ccall('disassembleWithNumber', 'string', [\"number\", \"string\"], [opcode, data]);")
+	private static native String disassembleWithDouble(byte opcode, String data);
+
+	@JSBody(params = {"opcode", "data"}, script = "return Module.ccall('disassembleWithBool', 'string', [\"number\", \"boolean\"], [opcode, data]);")
+	private static native String disassembleWithBoolean(byte opcode, boolean data);
+
+	@JSBody(script = "return Module.ccall('pop', 'string', null, null);")
+	public static native String pop();
+
+	@JSBody(params = {"opcode"}, script = "Module.ccall('run', null, [\"number\"], [opcode]);")
+	public static native void run(byte opcode);
 	public void run(byte opcode, BigDecimal data) {
 		runWithDouble(opcode, data + "");
 	}
