@@ -433,6 +433,14 @@ public class Compiler extends CompilerBase {
 		for (int i = 0; i < arrayList.size(); i++) {
 			args[i] = arrayList.get(i);
 		}
+		if (functionName.equals("declareNativeFunction") && args.length == 3) {
+			try {
+				SyntaxTree.declareNativeFunction(args[0].toString(), args[1].toString(), ((BigDecimal) args[2].getData()).intValue());
+			} catch (ClassCastException e) {
+				System.err.println("USE declareNativeFunction(TXT, TXT, NUM)");
+			}
+			return new SyntaxTree.Null();
+		}
 		return new SyntaxTree.CallFunction(functionName, args);
 	}
 
