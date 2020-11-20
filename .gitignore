@@ -29,3 +29,5 @@ web/target/web-1.0-SNAPSHOT/teavm/classes.js.map
 web/target/web-1.0-SNAPSHOT/teavm/classes.js.teavmdbg
 web/.idea
 web/web.iml
+web/target/web-1.0-SNAPSHOT/VM.js
+web/target/web-1.0-SNAPSHOT/VM.wasm

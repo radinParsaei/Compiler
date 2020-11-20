@@ -1,4 +1,6 @@
 import org.teavm.jso.dom.html.HTMLDocument;
+import org.teavm.jso.dom.html.HTMLElement;
+import org.w3c.dom.html.HTMLParagraphElement;
 
 public class Targets {
     public static final boolean isWeb = true;
@@ -6,8 +8,8 @@ public class Targets {
 
     public static void print(ValueBase value) {
         HTMLDocument document = HTMLDocument.current();
-        document.getElementById("console2")
-                .setInnerHTML((document.getElementById("console2").getInnerHTML() + value)
-                        .replace("\n", "<br>"));
+        HTMLElement htmlParagraphElement = document.createElement("p");
+        htmlParagraphElement.setInnerHTML(value.toString().replace("\n", "<br>"));
+        document.getElementById("console2").appendChild(htmlParagraphElement);
     }
 }
