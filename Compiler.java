@@ -500,6 +500,9 @@ public class Compiler extends CompilerBase {
 				((ProgramBase)result.getTokens().get(0).getObject()).eval();
 				if (Targets.isWeb) System.out.println("\nCode Running Done");
 			}
+			if (CustomCompileStep.used) {
+				CustomCompileStep.run((ProgramBase)result.getTokens().get(0).getObject());
+			}
 		} else {
 			System.out.println("Syntax is:\n" + result);
 			syntaxError("Syntax Error");
