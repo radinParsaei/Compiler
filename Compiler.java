@@ -118,7 +118,7 @@ public class Compiler extends CompilerBase {
 		if (!Targets.isWeb) {
 			if (getCounter() == 0) {
 				parser.on("SEP SEP", "SEP", (parser1) -> null);
-			} else if (getCounter() == 9) {
+			} else if (getCounter() == 11) {
 				for (int i = 0; i < parser.getTokens().size(); i++) {
 					if (parser.getTokens().get(i).getName().equals("OP2")
 							&& !parser.getTokens().get(i - 1).getName().equals("exp")) {
@@ -133,9 +133,9 @@ public class Compiler extends CompilerBase {
 						parser.getTokens().add(i, token);
 					}
 				}
-			} else if (getCounter() == 6 || getCounter() == 16) {
+			} else if (getCounter() == 6 || getCounter() == 18) {
 				parser.setSingleRunPerLocation(false);
-			} else if (getCounter() == 7 || getCounter() == 17) {
+			} else if (getCounter() == 7 || getCounter() == 19) {
 				parser.setSingleRunPerLocation(true);
 			}
 		}
