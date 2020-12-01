@@ -89,6 +89,8 @@ public class Compiler extends CompilerBase {
 		lexer.add("OP3", "\\|\\||\\||and|&&|&|or");
 		//while (keyword)
 		lexer.add("WH", "while ");
+		//exclamation
+		lexer.add("!", "!");
 		//if (keyword)
 		lexer.add("IF", "if ");
 		//else (keyword)
@@ -219,7 +221,7 @@ public class Compiler extends CompilerBase {
 		return stringArrayList;
 	}
 
-	@ParserEvent(map = "exp : ID OP_PAREN (exp )?(COMMA exp )*CL_PAREN", priority = 8)
+	@ParserEvent(map = "exp : ID ! OP_PAREN (exp )?(COMMA exp )*CL_PAREN", priority = 8)
 	public Object callFunctionFromPointer(Parser parser) {
 		ArrayList<ValueBase> arrayList = new ArrayList<>();
 		for (Token token : parser.getTokens()) {
