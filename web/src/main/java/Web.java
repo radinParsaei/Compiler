@@ -14,7 +14,7 @@ public class Web {
                 parser.setSingleRunPerLocation(true);
             }
             if (compiler.getCounter() == 7) parser.on("fn COMMA (ID|vard)", "fn", compiler::function2);
-            if (compiler.getCounter() == 8) parser.on("ID OP_PAREN (exp )?(COMMA exp )*CL_PAREN", "exp", compiler::callFunctionFromPointer);
+            if (compiler.getCounter() == 8) parser.on("ID ! OP_PAREN (exp )?(COMMA exp )*CL_PAREN", "exp", compiler::callFunctionFromPointer);
             if (compiler.getCounter() == 9) parser.on("ID OP_PAREN", "fnc", compiler::functionCall);
             if (compiler.getCounter() == 10) parser.on("OP_PAREN ID( COMMA ID)* CL_PAREN ARROW", "lambda", compiler::lambdaArgs);
             if (compiler.getCounter() == 11) {
