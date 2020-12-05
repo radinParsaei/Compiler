@@ -35,35 +35,36 @@ public class Web {
                 }
             }
             if (compiler.getCounter() == 12) parser.on("exp OP1 exp", "exp", compiler::multiplyAndDivideAndRemainder);
-            if (compiler.getCounter() == 13) parser.on("exp OP2 exp", "exp", compiler::additionAndSubtraction);
-            if (compiler.getCounter() == 14) parser.on("exp COMP exp", "exp", compiler::comparison);
-            if (compiler.getCounter() == 15) parser.on("exp OP3 exp", "exp", compiler::bitwiseAnd);
-            if (compiler.getCounter() == 16) parser.on("OP_PAREN exp CL_PAREN", "exp", compiler::parentheses);
-            if (compiler.getCounter() == 17) {
+            if (compiler.getCounter() == 13) parser.on("exp E exp", "exp", compiler::exponentiation);
+            if (compiler.getCounter() == 14) parser.on("exp OP2 exp", "exp", compiler::additionAndSubtraction);
+            if (compiler.getCounter() == 15) parser.on("exp COMP exp", "exp", compiler::comparison);
+            if (compiler.getCounter() == 16) parser.on("exp OP3 exp", "exp", compiler::bitwiseAnd);
+            if (compiler.getCounter() == 17) parser.on("OP_PAREN exp CL_PAREN", "exp", compiler::parentheses);
+            if (compiler.getCounter() == 18) {
                 parser.on("((VAR )?set exp|vard( exp)?) SEP", "program", compiler::setVariable);
             }
-            if (compiler.getCounter() == 18) {
+            if (compiler.getCounter() == 19) {
                 parser.setSingleRunPerLocation(false);
                 parser.on("PRINT exp SEP", "program", compiler::print);
                 parser.setSingleRunPerLocation(true);
             }
-            if (compiler.getCounter() == 19) parser.on("RET (exp )?SEP", "program", compiler::_return);
-            if (compiler.getCounter() == 20) parser.on("fnc exp", "fnc", compiler::functionCall2);
-            if (compiler.getCounter() == 21) parser.on("fnc COMMA exp", "fnc", compiler::functionCall3);
-            if (compiler.getCounter() == 22) parser.on("program (SEP )?(program ?)+", "program", compiler::programs);
-            if (compiler.getCounter() == 23)
-                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::_while);
+            if (compiler.getCounter() == 20) parser.on("RET (exp )?SEP", "program", compiler::_return);
+            if (compiler.getCounter() == 21) parser.on("fnc exp", "fnc", compiler::functionCall2);
+            if (compiler.getCounter() == 22) parser.on("fnc COMMA exp", "fnc", compiler::functionCall3);
+            if (compiler.getCounter() == 23) parser.on("program (SEP )?(program ?)+", "program", compiler::programs);
             if (compiler.getCounter() == 24)
+                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::_while);
+            if (compiler.getCounter() == 25)
                 parser.on("IF exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET", "ifprogram", compiler::_if);
-            if (compiler.getCounter() == 25) parser.on("ifprogram (SEP )?ELSE ifprogram", "ifprogram", compiler::elseif);
-            if (compiler.getCounter() == 26)
+            if (compiler.getCounter() == 26) parser.on("ifprogram (SEP )?ELSE ifprogram", "ifprogram", compiler::elseif);
+            if (compiler.getCounter() == 27)
                 parser.on("ifprogram (SEP )?ELSE (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::_else);
-            if (compiler.getCounter() == 27) parser.on("ifprogram SEP", "program", compiler::ifToProgram);
-            if (compiler.getCounter() == 28)
+            if (compiler.getCounter() == 28) parser.on("ifprogram SEP", "program", compiler::ifToProgram);
+            if (compiler.getCounter() == 29)
                 parser.on("fn CL_PAREN (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::funcDeclaration);
-            if (compiler.getCounter() == 29) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?program CL_BRACKET", "exp", compiler::lambda);
-            if (compiler.getCounter() == 30) parser.on("fnc CL_PAREN", "exp", compiler::functionCall4);
-            if (compiler.getCounter() == 31) parser.on("exp SEP", "program", compiler::executeValue);
+            if (compiler.getCounter() == 30) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?program CL_BRACKET", "exp", compiler::lambda);
+            if (compiler.getCounter() == 31) parser.on("fnc CL_PAREN", "exp", compiler::functionCall4);
+            if (compiler.getCounter() == 32) parser.on("exp SEP", "program", compiler::executeValue);
         }
     }
 }
