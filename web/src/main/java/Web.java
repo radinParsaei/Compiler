@@ -1,7 +1,7 @@
 public class Web {
     public static void parse(Parser parser, Compiler compiler) {
         parser.on("SEP SEP", "SEP", (parser1) -> null);
-        for (compiler.setCounter(0); compiler.getCounter() < 32; compiler.increaseCounter()) {
+        for (compiler.setCounter(0); compiler.getCounter() < 33; compiler.increaseCounter()) {
             if (compiler.getCounter() == 0) parser.on("NUM", "exp", compiler::number);
             if (compiler.getCounter() == 1) parser.on("TXT", "exp", compiler::text);
             if (compiler.getCounter() == 2) parser.on("BOOL", "exp", compiler::booleanExpression);
