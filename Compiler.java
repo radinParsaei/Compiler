@@ -280,7 +280,7 @@ public class Compiler extends CompilerBase {
 						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
 			default:
 				syntaxError("Use +=, -=, *=, /=, %=, **=, &=, |=");
-				System.exit(1);
+				if (!Targets.isWeb) System.exit(1);
 		}
 		return null;
 	}
