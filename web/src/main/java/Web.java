@@ -55,11 +55,7 @@ public class Web {
             if (compiler.getCounter() == 24)
                 parser.on("WH exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::_while);
             if (compiler.getCounter() == 25)
-                parser.on("IF exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET", "ifprogram", compiler::_if);
-            if (compiler.getCounter() == 26) parser.on("ifprogram (SEP )?ELSE ifprogram", "ifprogram", compiler::elseif);
-            if (compiler.getCounter() == 27)
-                parser.on("ifprogram (SEP )?ELSE (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::_else);
-            if (compiler.getCounter() == 28) parser.on("ifprogram SEP", "program", compiler::ifToProgram);
+                parser.on("IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", "program", compiler::_if);
             if (compiler.getCounter() == 29)
                 parser.on("fn CL_PAREN (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::funcDeclaration);
             if (compiler.getCounter() == 30) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?program CL_BRACKET", "exp", compiler::lambda);
