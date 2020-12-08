@@ -121,7 +121,7 @@ public class Compiler extends CompilerBase {
 		if (!Targets.isWeb) {
 			if (getCounter() == 0) {
 				parser.on("SEP SEP", "SEP", (parser1) -> null);
-			} else if (getCounter() == 11) {
+			} else if (getCounter() == 12) {
 				for (int i = 0; i < parser.getTokens().size(); i++) {
 					if (parser.getTokens().get(i).getName().equals("OP2")
 							&& !parser.getTokens().get(i - 1).getName().equals("exp")) {
@@ -136,9 +136,9 @@ public class Compiler extends CompilerBase {
 						parser.getTokens().add(i, token);
 					}
 				}
-			} else if (getCounter() == 6 || getCounter() == 18) {
+			} else if (getCounter() == 6) {
 				parser.setSingleRunPerLocation(false);
-			} else if (getCounter() == 7 || getCounter() == 19) {
+			} else if (getCounter() == 7) {
 				parser.setSingleRunPerLocation(true);
 			}
 		}
@@ -251,52 +251,26 @@ public class Compiler extends CompilerBase {
 		return arrayList;
 	}
 
-	@ParserEvent(map = "program : ID (OP2|OP1|OP3|E) SET exp SEP", priority = 11)
+	@ParserEvent(map = "inc : ID (OP2|OP1|OP3|E) SET", priority = 11)
 	public Object increaseAndOthers(Parser parser) {
-		switch (parser.getTokens().get(1).getText()) {
-			case "+":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.Add(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			case "-":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.Sub(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			case "*":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.Mul(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			case "/":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.Div(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			case "%":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.Mod(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			case "&":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.BitwiseAnd(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			case "|":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.BitwiseOr(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			case "**":
-				return new SyntaxTree.SetVariable(parser.getTokens().get(0).getText(), new SyntaxTree.Pow(new SyntaxTree
-						.Variable(parser.getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(3).getObject()));
-			default:
-				syntaxError("Use +=, -=, *=, /=, %=, **=, &=, |=");
-				if (!Targets.isWeb) System.exit(1);
-		}
-		return null;
+		return parser;
 	}
 
 	@ParserEvent(map = "exp : ID", priority = 12)
 	public Object variable(Parser parser) {
+		setCounter(8);
 		return new SyntaxTree.Variable(parser.getTokens().get(0).getText());
 	}
 
 	@ParserEvent(map = "exp : exp E exp", priority = 13)
 	public Object exponentiation(Parser parser) {
+		setCounter(8);
 		return new SyntaxTree.Pow((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
 	@ParserEvent(map = "exp : exp OP1 exp", priority = 14)
 	public Object multiplyAndDivideAndRemainder(Parser parser) {
+		setCounter(8);
 		if (parser.getTokens().get(1).getText().equals("*")) {
 			return new SyntaxTree.Mul((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 		}
@@ -308,6 +282,7 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : exp OP2 exp", priority = 15)
 	public Object additionAndSubtraction(Parser parser) {
+		setCounter(8);
 		if (parser.getTokens().get(1).getText().equals("+")) {
 			return new SyntaxTree.Add((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 		}
@@ -316,6 +291,7 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : exp COMP exp", priority = 16)
 	public Object comparison(Parser parser) {
+		setCounter(8);
 		switch (parser.getTokens().get(1).getText()) {
 			case "==":
 				return new SyntaxTree.Equals((ValueBase) parser.getTokens().get(0).getObject(),
@@ -347,6 +323,7 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "exp : exp OP3 exp", priority = 17)
 	public Object bitwiseAnd(Parser parser) {
+		setCounter(8);
 		switch (parser.getTokens().get(1).getText()) {
 			case "&":
 				return new SyntaxTree.BitwiseAnd((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
@@ -366,8 +343,42 @@ public class Compiler extends CompilerBase {
 		setCounter(8);
 		return parser.getTokens().get(1).getObject();
 	}
+
+	@ParserEvent(map = "program : inc exp SEP", priority = 19)
+	public Object increaseAndOthers1(Parser parser) {
+		switch (((Parser) parser.getTokens().get(0).getObject()).getTokens().get(1).getText()) {
+			case "+":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Add(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "-":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Sub(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "*":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Mul(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "/":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Div(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "%":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Mod(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "&":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.BitwiseAnd(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "|":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.BitwiseOr(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "**":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Pow(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			default:
+				syntaxError("Use +=, -=, *=, /=, %=, **=, &=, |=");
+				if (!Targets.isWeb) System.exit(1);
+		}
+		return null;
+	}
 	
-	@ParserEvent(map = "program : ((VAR )?set exp|vard( exp)?) SEP", priority = 19)
+	@ParserEvent(map = "program : ((VAR )?set exp|vard( exp)?) SEP", priority = 20)
 	public Object setVariable(Parser parser) {
 		if (parser.getTokens().get(0).getName().equals("vard")) {
 			ValueBase value;
@@ -385,12 +396,12 @@ public class Compiler extends CompilerBase {
 				(ValueBase) parser.getTokens().get(1).getObject(), false, true);
 	}
 
-	@ParserEvent(map = "program : PRINT exp SEP", priority = 20)
+	@ParserEvent(map = "program : PRINT exp SEP", priority = 21)
 	public Object print(Parser parser) {
 		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "program : RET (exp )?SEP", priority = 21)
+	@ParserEvent(map = "program : RET (exp )?SEP", priority = 22)
 	public Object _return(Parser parser) {
 		if (parser.getTokens().size() == 2) {
 			return new SyntaxTree.Return(new SyntaxTree.Null());
@@ -398,7 +409,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Return((ValueBase) parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "fnc : fnc exp", priority = 22)
+	@ParserEvent(map = "fnc : fnc exp", priority = 23)
 	public Object functionCall2(Parser parser) {
 		ArrayList<ValueBase> arrayList = new ArrayList<>();
 		arrayList.add(new SyntaxTree.Text(parser.getTokens().get(0).getObject().toString()));
@@ -406,14 +417,14 @@ public class Compiler extends CompilerBase {
 		return arrayList;
 	}
 
-	@ParserEvent(map = "fnc : fnc COMMA exp", priority = 23)
+	@ParserEvent(map = "fnc : fnc COMMA exp", priority = 24)
 	public Object functionCall3(Parser parser) {
 		ArrayList<ValueBase> arrayList = (ArrayList<ValueBase>) parser.getTokens().get(0).getObject();
 		arrayList.add((ValueBase) parser.getTokens().get(2).getObject());
 		return arrayList;
 	}
 
-	@ParserEvent(map = "program : program (SEP )?(program ?)+", priority = 24)
+	@ParserEvent(map = "program : program (SEP )?(program ?)+", priority = 25)
 	public Object programs(Parser parser) {
 		parser.remove("SEP");
 		ProgramBase[] programs = new ProgramBase[parser.getTokens().size()];
@@ -423,14 +434,14 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Programs(programs);
 	}
 
-	@ParserEvent(map = "program : WH exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", priority = 25)
+	@ParserEvent(map = "program : WH exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", priority = 26)
 	public Object _while(Parser parser) {
 		setCounter(22);
 		parser.remove("SEP");
 		return new SyntaxTree.While((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
 	}
 
-	@ParserEvent(map = "program : IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", priority = 26)
+	@ParserEvent(map = "program : IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", priority = 27)
 	public Object _if(Parser parser) {
 		setCounter(22);
 		parser.remove("SEP");
@@ -461,7 +472,7 @@ public class Compiler extends CompilerBase {
 		return _if;
 	}
 
-	@ParserEvent(map = "program : fn CL_PAREN (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", priority = 27)
+	@ParserEvent(map = "program : fn CL_PAREN (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", priority = 28)
 	public Object funcDeclaration(Parser parser) {
 		setCounter(22);
 		parser.remove("SEP");
@@ -477,7 +488,7 @@ public class Compiler extends CompilerBase {
 	}
 
 
-	@ParserEvent(map = "exp : (OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?program CL_BRACKET", priority = 28)
+	@ParserEvent(map = "exp : (OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?program CL_BRACKET", priority = 29)
 	public Object lambda(Parser parser) {
 		setCounter(8);
 		parser.remove("SEP");
@@ -488,7 +499,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Lambda(new SyntaxTree.CreateLambda((ProgramBase) parser.getTokens().get(2).getObject(), args));
 	}
 
-	@ParserEvent(map = "exp : fnc CL_PAREN", priority = 29)
+	@ParserEvent(map = "exp : fnc CL_PAREN", priority = 30)
 	public Object functionCall4(Parser parser) {
 		setCounter(8);
 		ArrayList<ValueBase> arrayList;
@@ -516,7 +527,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.CallFunction(functionName, args);
 	}
 
-	@ParserEvent(map = "program : exp SEP", priority = 30)
+	@ParserEvent(map = "program : exp SEP", priority = 31)
 	public Object executeValue(Parser parser) {
 		setCounter(22);
 		return new SyntaxTree.ExecuteValue((ValueBase) parser.getTokens().get(0).getObject());
