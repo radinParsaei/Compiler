@@ -1,3 +1,5 @@
+import java.math.BigDecimal;
+
 public class Web {
     public static void parse(Parser parser, Compiler compiler) {
         parser.on("SEP SEP", "SEP", (parser1) -> null);
@@ -26,7 +28,10 @@ public class Web {
                             && !parser.getTokens().get(i - 1).getName().equals("CL_PAREN")) {
                         ValueBase value = (ValueBase) parser.getTokens().get(i + 1).getObject();
                         if (parser.getTokens().get(i).getText().equals("-")) {
-                            value = new SyntaxTree.Negative(value);
+                            if (value instanceof SyntaxTree.Number)
+                                value = new SyntaxTree.Number(((BigDecimal) value.getData()).negate());
+                            else
+                                value = new SyntaxTree.Negative(value);
                         }
                         parser.getTokens().remove(i);
                         parser.getTokens().remove(i);

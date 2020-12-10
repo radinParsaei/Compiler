@@ -128,6 +128,9 @@ public class Compiler extends CompilerBase {
 							&& !parser.getTokens().get(i - 1).getName().equals("CL_PAREN")) {
 						ValueBase value = (ValueBase) parser.getTokens().get(i + 1).getObject();
 						if (parser.getTokens().get(i).getText().equals("-")) {
+							if (value instanceof SyntaxTree.Number)
+								value = new SyntaxTree.Number(((BigDecimal) value.getData()).negate());
+							else
 							value = new SyntaxTree.Negative(value);
 						}
 						parser.getTokens().remove(i);
