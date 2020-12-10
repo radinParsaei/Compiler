@@ -124,7 +124,8 @@ public class Compiler extends CompilerBase {
 			} else if (getCounter() == 12) {
 				for (int i = 0; i < parser.getTokens().size(); i++) {
 					if (parser.getTokens().get(i).getName().equals("OP2")
-							&& !parser.getTokens().get(i - 1).getName().equals("exp")) {
+							&& !parser.getTokens().get(i - 1).getName().equals("exp")
+							&& !parser.getTokens().get(i - 1).getName().equals("CL_PAREN")) {
 						ValueBase value = (ValueBase) parser.getTokens().get(i + 1).getObject();
 						if (parser.getTokens().get(i).getText().equals("-")) {
 							value = new SyntaxTree.Negative(value);
