@@ -488,7 +488,7 @@ public class Compiler extends CompilerBase {
 			args[i] = stringArrayList.get(i);
 		}
 		return new SyntaxTree.Function(functionName,
-				parser.getTokens().get(3).getName().equals("programs")?(ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs(), args);
+				parser.getTokens().get(3).getName().equals("program")?(ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs(), args);
 	}
 
 
