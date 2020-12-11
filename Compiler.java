@@ -438,11 +438,11 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Programs(programs);
 	}
 
-	@ParserEvent(map = "program : WH exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", priority = 26)
+	@ParserEvent(map = "program : WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 26)
 	public Object _while(Parser parser) {
 		setCounter(22);
 		parser.remove("SEP");
-		return new SyntaxTree.While((ValueBase)parser.getTokens().get(1).getObject(), (ProgramBase)parser.getTokens().get(3).getObject());
+		return new SyntaxTree.While((ValueBase)parser.getTokens().get(1).getObject(), parser.getTokens().get(3).getName().equals("program")? (ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs());
 	}
 
 	@ParserEvent(map = "program : IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", priority = 27)
@@ -476,7 +476,7 @@ public class Compiler extends CompilerBase {
 		return _if;
 	}
 
-	@ParserEvent(map = "program : fn CL_PAREN (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", priority = 28)
+	@ParserEvent(map = "program : fn CL_PAREN (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 28)
 	public Object funcDeclaration(Parser parser) {
 		setCounter(22);
 		parser.remove("SEP");
@@ -488,19 +488,19 @@ public class Compiler extends CompilerBase {
 			args[i] = stringArrayList.get(i);
 		}
 		return new SyntaxTree.Function(functionName,
-				(ProgramBase)parser.getTokens().get(3).getObject(), args);
+				parser.getTokens().get(3).getName().equals("programs")?(ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs(), args);
 	}
 
 
-	@ParserEvent(map = "exp : (OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?program CL_BRACKET", priority = 29)
+	@ParserEvent(map = "exp : (OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?(program )?CL_BRACKET", priority = 29)
 	public Object lambda(Parser parser) {
 		setCounter(8);
 		parser.remove("SEP");
-		if (parser.getTokens().size() == 6)
-			return new SyntaxTree.Lambda(new SyntaxTree.CreateLambda((ProgramBase) parser.getTokens().get(4).getObject()));
+		if (parser.getTokens().size() == 6 || parser.getTokens().size() == 5)
+			return new SyntaxTree.Lambda(new SyntaxTree.CreateLambda(parser.getTokens().get(4).getName().equals("program")? (ProgramBase) parser.getTokens().get(4).getObject():new SyntaxTree.Programs()));
 		String[] args = new String[((ArrayList<String>)parser.getTokens().get(0).getObject()).size()];
 		args = ((ArrayList<String>)parser.getTokens().get(0).getObject()).toArray(args);
-		return new SyntaxTree.Lambda(new SyntaxTree.CreateLambda((ProgramBase) parser.getTokens().get(2).getObject(), args));
+		return new SyntaxTree.Lambda(new SyntaxTree.CreateLambda(parser.getTokens().get(2).getName().equals("program")? (ProgramBase) parser.getTokens().get(2).getObject():new SyntaxTree.Programs(), args));
 	}
 
 	@ParserEvent(map = "exp : fnc CL_PAREN", priority = 30)

@@ -59,12 +59,12 @@ public class Web {
             if (compiler.getCounter() == 24) parser.on("fnc COMMA exp", "fnc", compiler::functionCall3);
             if (compiler.getCounter() == 25) parser.on("program (SEP )?(program ?)+", "program", compiler::programs);
             if (compiler.getCounter() == 26)
-                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::_while);
+                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_while);
             if (compiler.getCounter() == 27)
                 parser.on("IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", "program", compiler::_if);
             if (compiler.getCounter() == 28)
-                parser.on("fn CL_PAREN (SEP )?OP_BRACKET (SEP )?program CL_BRACKET SEP", "program", compiler::funcDeclaration);
-            if (compiler.getCounter() == 29) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?program CL_BRACKET", "exp", compiler::lambda);
+                parser.on("fn CL_PAREN (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::funcDeclaration);
+            if (compiler.getCounter() == 29) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?(program )?CL_BRACKET", "exp", compiler::lambda);
             if (compiler.getCounter() == 30) parser.on("fnc CL_PAREN", "exp", compiler::functionCall4);
             if (compiler.getCounter() == 31) parser.on("exp SEP", "program", compiler::executeValue);
         }
