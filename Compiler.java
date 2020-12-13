@@ -470,7 +470,7 @@ public class Compiler extends CompilerBase {
 				tmp = (SyntaxTree.If) tmp.getElseProgram();
 			}
 		}
-		if (parser.getTokens().get(pI + 2).getName().equals("ELSE")) {
+		if (parser.getTokens().size() > pI + 2 && parser.getTokens().get(pI + 2).getName().equals("ELSE")) {
 			tmp.addElse((ProgramBase) parser.getTokens().get(pI + 4).getObject());
 		}
 		return _if;
