@@ -1,3 +1,4 @@
+import org.teavm.jso.browser.Window;
 import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.*;
@@ -12,6 +13,11 @@ public class Client extends CompilerMain {
                 SyntaxTree.getFunctions().clear();
                 SyntaxTree.getVariables().clear();
                 SyntaxTree.getClassesParameters().clear();
+                SyntaxTree.CreateLambda.setCounter(0);
+                SyntaxTree.resetNameSpaces();
+                for (int i : Targets.getIntervalCodes()) {
+                    Window.clearInterval(i);
+                }
                 document.getElementById("console2").setInnerHTML("");
                 Compiler compiler = new Compiler(null, true, null, null, null);
                 compile(compiler);
@@ -54,6 +60,7 @@ public class Client extends CompilerMain {
                 case "BOOL":
                 case "NULL":
                 case "RET":
+                case "BR":
                 case "WH":
                 case "FOR":
                     coloredText.append("<font color=\"#dc8842\">").append(token.getText()).append("</font>");
