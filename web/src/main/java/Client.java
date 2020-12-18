@@ -55,6 +55,7 @@ public class Client extends CompilerMain {
                 case "NULL":
                 case "RET":
                 case "WH":
+                case "FOR":
                     coloredText.append("<font color=\"#dc8842\">").append(token.getText()).append("</font>");
                     break;
                 case "IGNORE":

@@ -48,6 +48,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
                     case "VAR":
                     case "RET":
                     case "WH":
+                    case "FOR":
                         builder.styled(attributedStyle.foreground(140), token.getText());
                         break;
                     case "IGNORE":
