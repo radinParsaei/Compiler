@@ -3,7 +3,7 @@ import java.math.BigDecimal;
 public class Web {
     public static void parse(Parser parser, Compiler compiler) {
         parser.on("SEP SEP", "SEP", (parser1) -> null);
-        for (compiler.setCounter(0); compiler.getCounter() < 34; compiler.increaseCounter()) {
+        for (compiler.setCounter(0); compiler.getCounter() < 35; compiler.increaseCounter()) {
             if (compiler.getCounter() == 0) parser.on("NUM", "exp", compiler::number);
             if (compiler.getCounter() == 1) parser.on("TXT", "exp", compiler::text);
             if (compiler.getCounter() == 2) parser.on("BOOL", "exp", compiler::booleanExpression);
@@ -56,20 +56,21 @@ public class Web {
             }
             if (compiler.getCounter() == 22) parser.on("RET (exp )?SEP", "program", compiler::_return);
             if (compiler.getCounter() == 23) parser.on("BR SEP", "program", compiler::_break);
-            if (compiler.getCounter() == 24) parser.on("fnc exp", "fnc", compiler::functionCall2);
-            if (compiler.getCounter() == 25) parser.on("fnc COMMA exp", "fnc", compiler::functionCall3);
-            if (compiler.getCounter() == 26) parser.on("program (SEP )?(program ?)+", "program", compiler::programs);
-            if (compiler.getCounter() == 27)
-                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_while);
+            if (compiler.getCounter() == 24) parser.on("CON SEP", "program", compiler::_continue);
+            if (compiler.getCounter() == 25) parser.on("fnc exp", "fnc", compiler::functionCall2);
+            if (compiler.getCounter() == 26) parser.on("fnc COMMA exp", "fnc", compiler::functionCall3);
+            if (compiler.getCounter() == 27) parser.on("program (SEP )?(program ?)+", "program", compiler::programs);
             if (compiler.getCounter() == 28)
-                parser.on("FOR (OP_PAREN )?program exp SEP program (CL_PAREN )?(SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_for);
+                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_while);
             if (compiler.getCounter() == 29)
-                parser.on("IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", "program", compiler::_if);
+                parser.on("FOR (OP_PAREN )?program exp SEP program (CL_PAREN )?(SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_for);
             if (compiler.getCounter() == 30)
+                parser.on("IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", "program", compiler::_if);
+            if (compiler.getCounter() == 31)
                 parser.on("fn CL_PAREN (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::funcDeclaration);
-            if (compiler.getCounter() == 31) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?(program )?CL_BRACKET", "exp", compiler::lambda);
-            if (compiler.getCounter() == 32) parser.on("fnc CL_PAREN", "exp", compiler::functionCall4);
-            if (compiler.getCounter() == 33) parser.on("exp SEP", "program", compiler::executeValue);
+            if (compiler.getCounter() == 32) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?(program )?CL_BRACKET", "exp", compiler::lambda);
+            if (compiler.getCounter() == 33) parser.on("fnc CL_PAREN", "exp", compiler::functionCall4);
+            if (compiler.getCounter() == 34) parser.on("exp SEP", "program", compiler::executeValue);
         }
     }
 }
