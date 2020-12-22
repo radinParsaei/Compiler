@@ -59,6 +59,8 @@ public class Client extends CompilerMain {
                 case "VAR":
                 case "BOOL":
                 case "NULL":
+                case "CLASS":
+                case "INIT":
                 case "RET":
                 case "BR":
                 case "CON":
