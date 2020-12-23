@@ -99,6 +99,8 @@ public class Compiler extends CompilerBase {
 		lexer.add("ELSE", "else");
 		//class (keyword)
 		lexer.add("CLASS", "class ");
+		//this (keyword)
+		lexer.add("THIS", "this");
 		//init (keyword)
 		lexer.add("INIT", "init");
 		//class (keyword)
@@ -128,7 +130,9 @@ public class Compiler extends CompilerBase {
 		lexer.add("SEP", new SeperatorChecker());
 	}
 
-	public void afterLex(Parser result) {}
+	public void afterLex(Parser result) {
+		result.on("THIS", "exp", (parser) -> new SyntaxTree.This());
+	}
 
 	public void parse(Parser parser) {
 		if (!Targets.isWeb) {
