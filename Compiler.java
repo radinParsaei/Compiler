@@ -460,9 +460,6 @@ public class Compiler extends CompilerBase {
 					.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
 		else
 			res =  new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
-		if (parser.getTokens().get(0).getName().equals("exp")) {
-			res.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
-		}
 		return res;
 	}
 
@@ -587,7 +584,7 @@ public class Compiler extends CompilerBase {
 			args[i] = stringArrayList.get(i);
 		}
 		return new SyntaxTree.Function(functionName,
-				parser.getTokens().get(3).getName().equals("program")?(ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs(), args);
+				parser.getTokens().get(3).getName().equals("program")?(ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs(), false, args);
 	}
 
 	@ParserEvent(map = "exp : (OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?(program )?CL_BRACKET", priority = 34)
