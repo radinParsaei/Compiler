@@ -455,11 +455,19 @@ public class Compiler extends CompilerBase {
 			args[i] = tmp.get(i);
 		}
 		SyntaxTree.CallFunction res;
-		if (parser.getTokens().get(0).getName().equals("exp"))
-			res =  new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
+		if (parser.getTokens().get(0).getName().equals("exp")) {
+			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
 					.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
-		else
-			res =  new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
+		}
+		else if ((parser.getTokens().get(0).getObject()).toString().equals("declareNativeFunction") && args.length == 3) {
+			if (!(args[0] instanceof SyntaxTree.Text && args[1] instanceof SyntaxTree.Text && args[2] instanceof SyntaxTree.Number)) {
+				syntaxError("USE declareNativeFunction(TEXT, TEXT, NUMBER)");
+			}
+			SyntaxTree.declareNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
+			return new SyntaxTree.Null();
+		} else {
+			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
+		}
 		return res;
 	}
 
