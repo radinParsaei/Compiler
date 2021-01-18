@@ -82,7 +82,7 @@ public class Compiler extends CompilerBase {
 		//lambda arrow
 		lexer.add("ARROW", "->");
 		//operators
-		lexer.add("COMP", "!==|===|!=|<=|>=|==|<|>");
+		lexer.add("COMP", "!=\\?|!=|==|<=|>=|=\\?|<|>");
 		lexer.add("SET", "=");
 		lexer.add("E", "\\*\\*");//exponentiation
 		lexer.add("OP1", "\\*|\\/|%");
@@ -335,7 +335,7 @@ public class Compiler extends CompilerBase {
 		setCounter(8);
 		switch (parser.getTokens().get(1).getText()) {
 			case "==":
-				return new SyntaxTree.Equals((ValueBase) parser.getTokens().get(0).getObject(),
+				return new SyntaxTree.StrictEquals((ValueBase) parser.getTokens().get(0).getObject(),
 						(ValueBase) parser.getTokens().get(2).getObject());
 			case ">":
 				return new SyntaxTree.GreaterThan((ValueBase) parser.getTokens().get(0).getObject(),
@@ -347,13 +347,13 @@ public class Compiler extends CompilerBase {
 				return new SyntaxTree.LesserThanOrEqual((ValueBase) parser.getTokens().get(0).getObject(),
 						(ValueBase) parser.getTokens().get(2).getObject());
 			case "!=":
-				return new SyntaxTree.Not(new SyntaxTree.Equals((ValueBase) parser.getTokens().get(0).getObject(),
-						(ValueBase) parser.getTokens().get(2).getObject()));
-			case "===":
-				return new SyntaxTree.StrictEquals((ValueBase) parser.getTokens().get(0).getObject(),
-						(ValueBase) parser.getTokens().get(2).getObject());
-			case "!==":
 				return new SyntaxTree.Not(new SyntaxTree.StrictEquals((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject()));
+			case "=?":
+				return new SyntaxTree.Equals((ValueBase) parser.getTokens().get(0).getObject(),
+						(ValueBase) parser.getTokens().get(2).getObject());
+			case "!=?":
+				return new SyntaxTree.Not(new SyntaxTree.Equals((ValueBase) parser.getTokens().get(0).getObject(),
 						(ValueBase) parser.getTokens().get(2).getObject()));
 //			case ">=":
 			default:
