@@ -5,5 +5,5 @@ func factorial(n) {
 	return factorial(n - 1) * n
 }
 
-print factorial(5)
+print(factorial(5))
 //120
