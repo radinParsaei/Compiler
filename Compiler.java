@@ -77,8 +77,6 @@ public class Compiler extends CompilerBase {
 		lexer.add("NULL", "null");
 		//spaces (ignore)
 		lexer.add("IGNORE", "(\t| |\\/\\/.*|\\/\\*.*\\*\\/)+");
-		//print
-		lexer.add("PRINT", "print ");
 		//lambda arrow
 		lexer.add("ARROW", "->");
 		//operators
@@ -458,13 +456,14 @@ public class Compiler extends CompilerBase {
 		if (parser.getTokens().get(0).getName().equals("exp")) {
 			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
 					.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
-		}
-		else if ((parser.getTokens().get(0).getObject()).toString().equals("declareNativeFunction") && args.length == 3) {
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("declareNativeFunction") && args.length == 3) {
 			if (!(args[0] instanceof SyntaxTree.Text && args[1] instanceof SyntaxTree.Text && args[2] instanceof SyntaxTree.Number)) {
 				syntaxError("USE declareNativeFunction(TEXT, TEXT, NUMBER)");
 			}
 			SyntaxTree.declareNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
 			return new SyntaxTree.Null();
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("print") && args.length == 1) {
+			return new SyntaxTree.ProgramWithReturn(new SyntaxTree.Null(), new SyntaxTree.Print((ValueBase) args[0].getData()));
 		} else {
 			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
 		}
@@ -498,11 +497,6 @@ public class Compiler extends CompilerBase {
 		}
 		return new SyntaxTree.SetVariable((String) parser.getTokens().get(0).getObject(),
 				(ValueBase) parser.getTokens().get(1).getObject(), false, true);
-	}
-
-	@ParserEvent(map = "program : PRINT exp SEP", priority = 26)
-	public Object print(Parser parser) {
-		return new SyntaxTree.Print((ValueBase)parser.getTokens().get(1).getObject());
 	}
 
 	@ParserEvent(map = "program : RET (exp )?SEP", priority = 27)
