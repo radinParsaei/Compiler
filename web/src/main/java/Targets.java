@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class Targets {
     public static final boolean isWeb = true;
     public static final boolean systemPrint = false;
+    public static final boolean isInThread = false;
     private static final ArrayList<Integer> intervalCodes = new ArrayList<>();
     public static int count = 0;
 

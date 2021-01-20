@@ -56,10 +56,10 @@ public class Web {
                 parser.on("(exp DOT )?fnc ((exp COMMA )*exp )?CL_PAREN", "exp", compiler::functionCall2);
             }
             if (compiler.getCounter() == 24) {
-                parser.on("((VAR )?set exp|vard( exp)?|exp DOT set exp) SEP", "program", compiler::setVariable);
+                parser.on("! exp", "exp", compiler::not);
             }
             if (compiler.getCounter() == 25) {
-                parser.on("PRINT exp SEP", "program", compiler::print);
+                parser.on("((VAR )?set exp|vard( exp)?|exp DOT set exp) SEP", "program", compiler::setVariable);
             }
             if (compiler.getCounter() == 26) parser.on("RET (exp )?SEP", "program", compiler::_return);
             if (compiler.getCounter() == 27) parser.on("BR SEP", "program", compiler::_break);

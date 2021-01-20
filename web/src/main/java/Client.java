@@ -52,7 +52,6 @@ public class Client extends CompilerMain {
                 case "NUM":
                     coloredText.append("<font color=\"#6897BB\">").append(token.getText()).append("</font>");
                     break;
-                case "PRINT":
                 case "IF":
                 case "ELSE":
                 case "FN":
