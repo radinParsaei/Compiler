@@ -463,7 +463,7 @@ public class Compiler extends CompilerBase {
 			SyntaxTree.declareNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
 			return new SyntaxTree.Null();
 		} else if ((parser.getTokens().get(0).getObject()).toString().equals("print") && args.length == 1) {
-			return new SyntaxTree.ProgramWithReturn(new SyntaxTree.Null(), new SyntaxTree.Print(args[0]));
+			return new SyntaxTree.PrintFunction(new SyntaxTree.Print(args[0]));
 		} else {
 			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
 		}
