@@ -626,6 +626,9 @@ public class Compiler extends CompilerBase {
 		}
 		result.remove("SEP");
 		if (result.getTokens().size() == 0) {
+			if (CustomCompileStep.used) {
+				CustomCompileStep.run(new SyntaxTree.Programs());
+			}
 			return ;
 		}
 		if (result.getTokens().size() != 1) {
