@@ -5,18 +5,20 @@ import java.math.BigDecimal;
 
 public class Compiler extends CompilerBase {
 	private final String fileName;
+	private final String xmlOutput;
 	private boolean isShell;
 	private boolean isCodeRunning = false;
 	private final String compiledFileName;
 	private final String serializeFileName;
 	private final String classFileName;
 
-	public Compiler(String fileName, boolean isShell, String compiledFileName, String classFileName, String serializeFileName) {
+	public Compiler(String fileName, boolean isShell, String compiledFileName, String classFileName, String serializeFileName, String xmlOutput) {
 		this.fileName = fileName;
 		this.isShell = isShell;
 		this.compiledFileName = compiledFileName;
 		this.serializeFileName = serializeFileName;
 		this.classFileName = classFileName;
+		this.xmlOutput = xmlOutput;
 	}
 
 	public String getInputCode() {
@@ -691,6 +693,18 @@ public class Compiler extends CompilerBase {
 					FileWriter writer = new FileWriter(compiledFileName);
 					VMTools vmTools = new VMTools();
 					writer.write(vmTools.syntaxTreeToVMByteCode((ProgramBase) result.getTokens().get(0).getObject()));
+					writer.close();
+				} catch (IOException e) {
+					System.out.println("ERROR: can't create output file");
+					e.printStackTrace();
+				}
+			}
+			if (xmlOutput != null) {
+				compiled = true;
+				try {
+					FileWriter writer = new FileWriter(xmlOutput);
+					XMLGenerator xmlGenerator = new XMLGenerator();
+					writer.write(xmlGenerator.syntaxTreeToXML((ProgramBase) result.getTokens().get(0).getObject()));
 					writer.close();
 				} catch (IOException e) {
 					System.out.println("ERROR: can't create output file");
