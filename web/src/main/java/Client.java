@@ -7,21 +7,36 @@ public class Client extends CompilerMain {
     public static void main(String[] args) {
         HTMLDocument document = HTMLDocument.current();
         HTMLElement button = document.getElementById("run");
-        button.addEventListener("click", new EventListener<Event>() {
-            @Override
-            public void handleEvent(Event evt) {
+        button.addEventListener("click", evt -> {
+            SyntaxTree.setId(SyntaxTree.getId() + 1);
+            Compiler compiler = new Compiler(null, true, null, null, null, null);
+            Thread thread = new Thread(() -> {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 SyntaxTree.getFunctions().clear();
                 SyntaxTree.getVariables().clear();
                 SyntaxTree.getClassesParameters().clear();
                 SyntaxTree.CreateLambda.setCounter(0);
                 SyntaxTree.resetNameSpaces();
-                for (int i : Targets.getIntervalCodes()) {
-                    Window.clearInterval(i);
-                }
                 document.getElementById("console2").setInnerHTML("");
-                Compiler compiler = new Compiler(null, true, null, null, null);
+                if (REPLReader.readLine().trim().split("\n")[0].matches("^\\s*< *\\?*xml.*>.*")) {
+                    XMLToSyntaxTree xmlToSyntaxTree = new XMLToSyntaxTree();
+                    xmlToSyntaxTree.xmlToProgram(REPLReader.readLine()).eval();
+                    return;
+                }
                 compile(compiler);
-            }
+            });
+            thread.start();
+            new Thread(() -> {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         });
 
         HTMLElement buttonTmp = document.getElementById("callColor");
@@ -39,7 +54,7 @@ public class Client extends CompilerMain {
         String text = REPLReader.readLine();
         text = text.replace("<", "&lt;");
         text = text.replace(">", "&gt;");
-        Compiler compiler = new Compiler(null, false, null, null, null);
+        Compiler compiler = new Compiler(null, false, null, null, null, null);
         Lexer lexer = new Lexer(compiler);
         compiler.initLexer(lexer);
         lexer.setError(false);
