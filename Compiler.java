@@ -678,7 +678,7 @@ public class Compiler extends CompilerBase {
 							new SyntaxTree.Function("<init>", new SyntaxTree.Programs()),
 							new SyntaxTree.Function("append", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Append(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"))), new SyntaxTree.Return(new SyntaxTree.This())), "value"),
 							new SyntaxTree.Function("insert", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Insert(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"), new SyntaxTree.Variable("index"))), new SyntaxTree.Return(new SyntaxTree.This())), "index", "value"),
-							new SyntaxTree.Function("get", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("index"))), new SyntaxTree.Return(new SyntaxTree.This())), "index"),
+							new SyntaxTree.Function("get", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("index"))), "index"),
 							new SyntaxTree.Function("set", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Set(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"), new SyntaxTree.Variable("index"))), new SyntaxTree.Return(new SyntaxTree.This())), "index", "value")
 					),
 					(ProgramBase) result.getTokens().get(0).getObject()
