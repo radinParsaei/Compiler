@@ -399,12 +399,34 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.CreateInstance((String) parser.getTokens().get(0).getObject(), args);
 	}
 
-	@ParserEvent(map = "program : exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET( SEP)? SET( SEP)? exp SEP", priority = 21)
+	@ParserEvent(map = "program : exp (OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET( SEP)? )+SET( SEP)? exp SEP", priority = 21)
 	public Object setInArray(Parser parser) {
 		setCounter(8);
 		parser.remove("SEP");
-		return new SyntaxTree.ExecuteValue(new SyntaxTree.CallFunction("set", (ValueBase) parser.getTokens().get(2).getObject(), (ValueBase) parser.getTokens().get(5).getObject())
-				.fromInstance((ValueBase)parser.getTokens().get(0).getObject()).setAddInstanceName(true));
+		if (parser.getTokens().size() == 6) {
+			return new SyntaxTree.ExecuteValue(new SyntaxTree.CallFunction("set", (ValueBase) parser.getTokens().get(2).getObject(), (ValueBase) parser.getTokens().get(5).getObject())
+					.fromInstance((ValueBase)parser.getTokens().get(0).getObject()).setAddInstanceName(true));
+		} else {
+			ValueBase result = null;
+			boolean isFirst = true;
+			int valueLocation = parser.getTokens().size() - 1;
+			ValueBase value = (ValueBase) parser.getTokens().get(valueLocation).getObject();
+			parser.getTokens().remove(valueLocation);
+			int indexLocation = parser.getTokens().size() - 3;
+			ValueBase index = (ValueBase) parser.getTokens().get(indexLocation).getObject();
+			parser.getTokens().remove(indexLocation);
+			for (Token token : parser.getTokens()) {
+				if (isFirst) {
+					result = (ValueBase) token.getObject();
+					isFirst = false;
+					continue;
+				}
+				if (token.getName().equals("exp")) {
+					result = new SyntaxTree.CallFunction("get", (ValueBase) token.getObject()).fromInstance(result).setAddInstanceName(true);
+				}
+			}
+			return new SyntaxTree.ExecuteValue(new SyntaxTree.CallFunction("set", index, value).fromInstance(result).setAddInstanceName(true));
+		}
 	}
 
 	@ParserEvent(map = "exp : exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET", priority = 22)
@@ -758,3 +780,4 @@ public class Compiler extends CompilerBase {
 		System.err.println("ERROR:\t" + line);
 	}
 }
+

@@ -50,7 +50,7 @@ public class Web {
             if (compiler.getCounter() == 18) parser.on("exp COMP exp", "exp", compiler::comparison);
             if (compiler.getCounter() == 19) parser.on("exp OP3 exp", "exp", compiler::bitwiseAnd);
             if (compiler.getCounter() == 20) parser.on("new OP_PAREN ((exp COMMA )*exp )?CL_PAREN", "exp", compiler::createInstance1);
-            if (compiler.getCounter() == 21) parser.on("exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET( SEP)? SET( SEP)? exp SEP", "program", compiler::setInArray);
+            if (compiler.getCounter() == 21) parser.on("exp (OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET( SEP)? )+SET( SEP)? exp SEP", "program", compiler::setInArray);
             if (compiler.getCounter() == 22) parser.on("exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET", "exp", compiler::getFromArray);
             if (compiler.getCounter() == 23) parser.on("OP_SQ_BRACKET( SEP)?( exp( SEP)? COMMA( SEP)?)*( exp)?( SEP)? CL_SQ_BRACKET", "exp", compiler::array);
             if (compiler.getCounter() == 24) parser.on("OP_PAREN exp CL_PAREN", "exp", compiler::parentheses);
