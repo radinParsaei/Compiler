@@ -521,6 +521,10 @@ public class Compiler extends CompilerBase {
 			return new SyntaxTree.Null();
 		} else if ((parser.getTokens().get(0).getObject()).toString().equals("print") && args.length == 1) {
 			return new SyntaxTree.PrintFunction(new SyntaxTree.Print(args[0]));
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("exit") && args.length == 1 || args.length == 0) {
+			if (args.length == 0)
+				return new SyntaxTree.ExitFunction(new SyntaxTree.Exit(new SyntaxTree.Null()));
+			return new SyntaxTree.ExitFunction(new SyntaxTree.Exit(args[0]));
 		} else {
 			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
 		}
