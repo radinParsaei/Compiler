@@ -78,7 +78,7 @@ public class Compiler extends CompilerBase {
 		//Null
 		lexer.add("NULL", "null");
 		//spaces (ignore)
-		lexer.add("IGNORE", "(\t| |\\/\\/.*|\\/\\*.*\\*\\/)+");
+		lexer.add("IGNORE", "(\t| |\\/\\/.*|\\/\\*(\\s*.?)*\\*\\/)+");
 		//lambda arrow
 		lexer.add("ARROW", "->");
 		//operators
