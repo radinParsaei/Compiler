@@ -82,12 +82,12 @@ public class Compiler extends CompilerBase {
 		//lambda arrow
 		lexer.add("ARROW", "->");
 		//operators
-		lexer.add("COMP", "!=\\?|!=|==|<=|>=|=\\?|<|>");
 		lexer.add("SET", "=");
 		lexer.add("E", "\\*\\*");//exponentiation
 		lexer.add("OP1", "\\*|\\/|%");
 		lexer.add("OP2", "\\-|\\+");
-		lexer.add("OP3", "\\|\\||\\||and|&&|&|or|\\^");
+		lexer.add("OP3", "\\|\\||\\||and|&&|&|or|\\^|>>|<<");
+		lexer.add("COMP", "!=\\?|!=|==|<=|>=|=\\?|<|>");
 		//while (keyword)
 		lexer.add("WH", "while ");
 		lexer.add("FOR", "for ");
@@ -369,6 +369,10 @@ public class Compiler extends CompilerBase {
 	public Object bitwiseAnd(Parser parser) {
 		setCounter(8);
 		switch (parser.getTokens().get(1).getText()) {
+			case ">>":
+				return new SyntaxTree.RightShift((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
+			case "<<":
+				return new SyntaxTree.LeftShift((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
 			case "^":
 				return new SyntaxTree.Xor((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
 			case "&":
@@ -485,6 +489,12 @@ public class Compiler extends CompilerBase {
 						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
 			case "^":
 				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Xor(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case "<<":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.LeftShift(new SyntaxTree
+						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
+			case ">>":
+				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.RightShift(new SyntaxTree
 						.Variable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText()), (ValueBase) parser.getTokens().get(1).getObject()));
 			case "**":
 				return new SyntaxTree.SetVariable(((Parser) parser.getTokens().get(0).getObject()).getTokens().get(0).getText(), new SyntaxTree.Pow(new SyntaxTree
