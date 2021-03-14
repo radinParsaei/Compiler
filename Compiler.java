@@ -194,15 +194,14 @@ public class Compiler extends CompilerBase {
 				.replace("\\'", "'")
 				.replace("\\\"", "\"")
 				.replace("\\\\", "\\");
-		if (string.contains("\\u")) {
-			for (int i = 0xFFFF; i >= 0; i--) {
-				StringBuilder tmp = new StringBuilder("\\u");
-				tmp.append(Integer.toHexString(i));
-				for (byte j = (byte) (4 - (tmp.length() - 2)); j > 0; j--) {
-					tmp.insert(2, "0");
-				}
-				string = string.replace(tmp, Character.toString((char) i));
-			}
+		int i = string.indexOf("\\u");
+		while (i != -1) {
+			StringBuilder tmp = new StringBuilder(string.substring(i + 2, i + 6));
+			i = string.indexOf("\\u", i + 1);
+			try {
+				int code = Integer.parseInt(tmp.toString(), 16);
+				string = string.replace("\\u" + tmp, Character.toString((char) code));
+			} catch (NumberFormatException ignore) {}
 		}
 		return new SyntaxTree.Text(string);
 	}
