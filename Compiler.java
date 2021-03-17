@@ -82,12 +82,12 @@ public class Compiler extends CompilerBase {
 		//lambda arrow
 		lexer.add("ARROW", "->");
 		//operators
-		lexer.add("SET", "=");
 		lexer.add("E", "\\*\\*");//exponentiation
 		lexer.add("OP1", "\\*|\\/|%");
 		lexer.add("OP2", "\\-|\\+");
 		lexer.add("OP3", "\\|\\||\\||and|&&|&|or|\\^|>>|<<");
 		lexer.add("COMP", "!=\\?|!=|==|<=|>=|=\\?|<|>");
+		lexer.add("SET", "=");
 		//while (keyword)
 		lexer.add("WH", "while ");
 		lexer.add("FOR", "for ");
