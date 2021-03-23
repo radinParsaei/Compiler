@@ -8,6 +8,7 @@ public class Targets {
     public static final boolean isWeb = true;
     public static final boolean isInThread = true;
     public static final boolean systemPrint = false;
+    public static final boolean useAnalyzer = false;
     public static int count = 0;
 
     public static void print(ValueBase value) {
