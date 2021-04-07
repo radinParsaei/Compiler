@@ -718,6 +718,7 @@ public class Compiler extends CompilerBase {
 					serializer.serialize(serializeFileName, (ProgramBase) result.getTokens().get(0).getObject());
 				}
 			}
+			SyntaxTree.declareNativeFunction("random", "randint", 2);
 			result.getTokens().get(0).setObject(new SyntaxTree.Programs(
 					new SyntaxTree.CreateClass("%Array",
 							new SyntaxTree.SetVariable("data", new SyntaxTree.List()).setIsDeclaration(true),
@@ -727,10 +728,16 @@ public class Compiler extends CompilerBase {
 							new SyntaxTree.Function("append", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Append(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"))), new SyntaxTree.Return(new SyntaxTree.This())), "value"),
 							new SyntaxTree.Function("insert", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Insert(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"), new SyntaxTree.Variable("index"))), new SyntaxTree.Return(new SyntaxTree.This())), "index", "value"),
 							new SyntaxTree.Function("get", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("index"))), "index"),
+							new SyntaxTree.Function("getFromEnd", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Sub(new SyntaxTree.GetSize(new SyntaxTree.Variable("data")), new SyntaxTree.Add(new SyntaxTree.Number(1), new SyntaxTree.Variable("index"))))), "index"),
+							new SyntaxTree.Function("getRandomItem", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.CallFunction("randint", new SyntaxTree.Number(0), new SyntaxTree.GetSize(new SyntaxTree.Variable("data")))))),
+							new SyntaxTree.Function("getFirstItem", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Number(0)))),
+							new SyntaxTree.Function("getLastItem", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Sub(new SyntaxTree.GetSize(new SyntaxTree.Variable("data")), new SyntaxTree.Number(1))))),
+							new SyntaxTree.Function("length", new SyntaxTree.Return(new SyntaxTree.GetSize(new SyntaxTree.Variable("data")))),
 							new SyntaxTree.Function("set", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Set(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"), new SyntaxTree.Variable("index"))), new SyntaxTree.Return(new SyntaxTree.This())), "index", "value")
 					),
 					(ProgramBase) result.getTokens().get(0).getObject()
 			));
+			SyntaxTree.deleteNativeFunction("random", "randint", 2);
 			boolean compiled = false;
 			if (classFileName != null) {
 				compiled = true;
