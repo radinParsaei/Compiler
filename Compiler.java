@@ -718,7 +718,8 @@ public class Compiler extends CompilerBase {
 					serializer.serialize(serializeFileName, (ProgramBase) result.getTokens().get(0).getObject());
 				}
 			}
-			SyntaxTree.declareNativeFunction("random", "randint", 2);
+			boolean addRandInt = !SyntaxTree.getFunctions().containsKey("randint:N#2#random");
+			if (addRandInt) SyntaxTree.declareNativeFunction("random", "randint", 2);
 			result.getTokens().get(0).setObject(new SyntaxTree.Programs(
 					new SyntaxTree.CreateClass("%Array",
 							new SyntaxTree.SetVariable("data", new SyntaxTree.List()).setIsDeclaration(true),
@@ -737,7 +738,7 @@ public class Compiler extends CompilerBase {
 					),
 					(ProgramBase) result.getTokens().get(0).getObject()
 			));
-			SyntaxTree.deleteNativeFunction("random", "randint", 2);
+			if (addRandInt) SyntaxTree.deleteNativeFunction("random", "randint", 2);
 			boolean compiled = false;
 			if (classFileName != null) {
 				compiled = true;
