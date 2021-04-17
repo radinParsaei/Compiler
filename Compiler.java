@@ -734,6 +734,7 @@ public class Compiler extends CompilerBase {
 							new SyntaxTree.Function("getFirstItem", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Number(0)))),
 							new SyntaxTree.Function("getLastItem", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Sub(new SyntaxTree.GetSize(new SyntaxTree.Variable("data")), new SyntaxTree.Number(1))))),
 							new SyntaxTree.Function("length", new SyntaxTree.Return(new SyntaxTree.GetSize(new SyntaxTree.Variable("data")))),
+							new SyntaxTree.Function("isEmpty", new SyntaxTree.Return(new SyntaxTree.StrictEquals(new SyntaxTree.GetSize(new SyntaxTree.Variable("data")), new SyntaxTree.Number(0)))),
 							new SyntaxTree.Function("set", new SyntaxTree.Programs(new SyntaxTree.SetVariable("data", new SyntaxTree.Set(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"), new SyntaxTree.Variable("index"))), new SyntaxTree.Return(new SyntaxTree.This())), "index", "value")
 					),
 					(ProgramBase) result.getTokens().get(0).getObject()
