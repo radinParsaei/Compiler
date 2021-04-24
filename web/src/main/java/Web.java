@@ -28,7 +28,8 @@ public class Web {
                 for (int i = 0; i < parser.getTokens().size(); i++) {
                     if (parser.getTokens().get(i).getName().equals("OP2")
                             && (i == 0 || (!parser.getTokens().get(i - 1).getName().equals("exp")
-                            && !parser.getTokens().get(i - 1).getName().equals("CL_PAREN")))) {
+                            && !parser.getTokens().get(i - 1).getName().equals("CL_PAREN")))
+                            && parser.getTokens().get(i + 1).getObject() != null) {
                         ValueBase value = (ValueBase) parser.getTokens().get(i + 1).getObject();
                         if (parser.getTokens().get(i).getText().equals("-")) {
                             if (value instanceof SyntaxTree.Number)
