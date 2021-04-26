@@ -435,7 +435,49 @@ public class Compiler extends CompilerBase {
 		}
 	}
 
-	@ParserEvent(map = "exp : exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET", priority = 22)
+
+	@ParserEvent(map = "exp : (exp DOT )?fnc ((exp COMMA )*exp )?CL_PAREN", priority = 22)
+	public Object functionCall2(Parser parser) {
+		setCounter(8);
+		ArrayList<ValueBase> tmp = new ArrayList<>();
+		boolean isFirst = true;
+		for (Token token : parser.getTokens()) {
+			if (isFirst) {
+				isFirst = false;
+				continue;
+			}
+			if (token.getName().equals("exp")) {
+				tmp.add((ValueBase) token.getObject());
+			}
+		}
+		ValueBase[] args = new ValueBase[tmp.size()];
+		for (int i = 0; i < tmp.size(); i++) {
+			args[i] = tmp.get(i);
+		}
+		SyntaxTree.CallFunction res;
+		if (parser.getTokens().get(0).getName().equals("exp")) {
+			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
+					.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("declareNativeFunction") && args.length == 3) {
+			if (!(args[0] instanceof SyntaxTree.Text && args[1] instanceof SyntaxTree.Text && args[2] instanceof SyntaxTree.Number)) {
+				syntaxError("USE declareNativeFunction(TEXT, TEXT, NUMBER)");
+			}
+			SyntaxTree.declareNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
+			return new SyntaxTree.Null();
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("print") && args.length == 1) {
+			return new SyntaxTree.PrintFunction(new SyntaxTree.Print(args[0]));
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("exit") && (args.length == 1 || args.length == 0)) {
+			if (args.length == 0)
+				return new SyntaxTree.ExitFunction(new SyntaxTree.Exit(new SyntaxTree.Null()));
+			return new SyntaxTree.ExitFunction(new SyntaxTree.Exit(args[0]));
+		} else {
+			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
+		}
+		return res;
+	}
+
+
+	@ParserEvent(map = "exp : exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET", priority = 23)
 	public Object getFromArray(Parser parser) {
 		setCounter(8);
 		parser.remove("SEP");
@@ -443,7 +485,7 @@ public class Compiler extends CompilerBase {
 				.fromInstance((ValueBase)parser.getTokens().get(0).getObject()).setAddInstanceName(true);
 	}
 
-	@ParserEvent(map = "exp : OP_SQ_BRACKET( SEP)?( exp( SEP)? COMMA( SEP)?)*( exp)?( SEP)? CL_SQ_BRACKET", priority = 23)
+	@ParserEvent(map = "exp : OP_SQ_BRACKET( SEP)?( exp( SEP)? COMMA( SEP)?)*( exp)?( SEP)? CL_SQ_BRACKET", priority = 24)
 	public Object array(Parser parser) {
 		setCounter(8);
 		parser.exitCheckLoop();
@@ -457,13 +499,13 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.CreateInstance("%Array", SyntaxTree.List.fromArrayList(arrayList));
 	}
 
-	@ParserEvent(map = "exp : OP_PAREN exp CL_PAREN", priority = 24)
+	@ParserEvent(map = "exp : OP_PAREN exp CL_PAREN", priority = 25)
 	public Object parentheses(Parser parser) {
 		setCounter(8);
 		return parser.getTokens().get(1).getObject();
 	}
 
-	@ParserEvent(map = "program : inc exp( SEP)?", priority = 25)
+	@ParserEvent(map = "program : inc exp( SEP)?", priority = 26)
 	public Object increaseAndOthers1(Parser parser) {
 		switch (((Parser) parser.getTokens().get(0).getObject()).getTokens().get(1).getText()) {
 			case "+":
@@ -504,46 +546,6 @@ public class Compiler extends CompilerBase {
 				if (!Targets.isWeb) System.exit(1);
 		}
 		return null;
-	}
-
-	@ParserEvent(map = "exp : (exp DOT )?fnc ((exp COMMA )*exp )?CL_PAREN", priority = 26)
-	public Object functionCall2(Parser parser) {
-		setCounter(8);
-		ArrayList<ValueBase> tmp = new ArrayList<>();
-		boolean isFirst = true;
-		for (Token token : parser.getTokens()) {
-			if (isFirst) {
-				isFirst = false;
-				continue;
-			}
-			if (token.getName().equals("exp")) {
-				tmp.add((ValueBase) token.getObject());
-			}
-		}
-		ValueBase[] args = new ValueBase[tmp.size()];
-		for (int i = 0; i < tmp.size(); i++) {
-			args[i] = tmp.get(i);
-		}
-		SyntaxTree.CallFunction res;
-		if (parser.getTokens().get(0).getName().equals("exp")) {
-			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
-					.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
-		} else if ((parser.getTokens().get(0).getObject()).toString().equals("declareNativeFunction") && args.length == 3) {
-			if (!(args[0] instanceof SyntaxTree.Text && args[1] instanceof SyntaxTree.Text && args[2] instanceof SyntaxTree.Number)) {
-				syntaxError("USE declareNativeFunction(TEXT, TEXT, NUMBER)");
-			}
-			SyntaxTree.declareNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
-			return new SyntaxTree.Null();
-		} else if ((parser.getTokens().get(0).getObject()).toString().equals("print") && args.length == 1) {
-			return new SyntaxTree.PrintFunction(new SyntaxTree.Print(args[0]));
-		} else if ((parser.getTokens().get(0).getObject()).toString().equals("exit") && (args.length == 1 || args.length == 0)) {
-			if (args.length == 0)
-				return new SyntaxTree.ExitFunction(new SyntaxTree.Exit(new SyntaxTree.Null()));
-			return new SyntaxTree.ExitFunction(new SyntaxTree.Exit(args[0]));
-		} else {
-			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
-		}
-		return res;
 	}
 
 	@ParserEvent(map = "exp : ! exp", priority = 27)
