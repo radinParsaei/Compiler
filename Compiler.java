@@ -737,6 +737,7 @@ public class Compiler extends CompilerBase {
 							new SyntaxTree.Function("<init>", new SyntaxTree.Programs()),
 							new SyntaxTree.Function("append", new SyntaxTree.SetVariable("data", new SyntaxTree.Append(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"))), "value"),
 							new SyntaxTree.Function("insert", new SyntaxTree.SetVariable("data", new SyntaxTree.Insert(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("value"), new SyntaxTree.Variable("index"))), "index", "value"),
+							new SyntaxTree.Function("indexOf", new SyntaxTree.Return(new SyntaxTree.IndexOf(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("a"))), "a"),
 							new SyntaxTree.Function("get", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Variable("index"))), "index"),
 							new SyntaxTree.Function("getFromEnd", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.Sub(new SyntaxTree.GetSize(new SyntaxTree.Variable("data")), new SyntaxTree.Add(new SyntaxTree.Number(1), new SyntaxTree.Variable("index"))))), "index"),
 							new SyntaxTree.Function("getRandomItem", new SyntaxTree.Return(new SyntaxTree.Get(new SyntaxTree.Variable("data"), new SyntaxTree.CallFunction("randint", new SyntaxTree.Number(0), new SyntaxTree.GetSize(new SyntaxTree.Variable("data")))))),
