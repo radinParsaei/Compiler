@@ -300,6 +300,15 @@ public class Compiler extends CompilerBase {
 		parser.remove("DOT");
 		parser.setSaveTexts(true);
 		if (parser.getTokens().size() == 2) {
+			if (parser.getTokens().get(1).getName().equals("exp")) {
+				ValueBase data = (ValueBase) parser.getTokens().get(1).getObject();
+				if (data instanceof SyntaxTree.Variable) {
+					((SyntaxTree.Variable) data).fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+				} else if (data instanceof SyntaxTree.CallFunction) {
+					((SyntaxTree.CallFunction) data).fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+				}
+				return data;
+			}
 			return new SyntaxTree.Variable(parser.getTokens().get(1).getText()).fromInstance((ValueBase) parser.getTokens().get(0).getObject())
 					.setAddInstanceName(true);
 		}
@@ -435,8 +444,15 @@ public class Compiler extends CompilerBase {
 		}
 	}
 
+	@ParserEvent(map = "exp : exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET", priority = 22)
+	public Object getFromArray(Parser parser) {
+		setCounter(8);
+		parser.remove("SEP");
+		return new SyntaxTree.CallFunction("get", (ValueBase) parser.getTokens().get(2).getObject())
+				.fromInstance((ValueBase)parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+	}
 
-	@ParserEvent(map = "exp : (exp DOT )?fnc ((exp COMMA )*exp )?CL_PAREN", priority = 22)
+	@ParserEvent(map = "exp : (exp DOT )?fnc ((exp COMMA )*exp )?CL_PAREN", priority = 23)
 	public Object functionCall2(Parser parser) {
 		setCounter(8);
 		ArrayList<ValueBase> tmp = new ArrayList<>();
@@ -474,15 +490,6 @@ public class Compiler extends CompilerBase {
 			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
 		}
 		return res;
-	}
-
-
-	@ParserEvent(map = "exp : exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET", priority = 23)
-	public Object getFromArray(Parser parser) {
-		setCounter(8);
-		parser.remove("SEP");
-		return new SyntaxTree.CallFunction("get", (ValueBase) parser.getTokens().get(2).getObject())
-				.fromInstance((ValueBase)parser.getTokens().get(0).getObject()).setAddInstanceName(true);
 	}
 
 	@ParserEvent(map = "exp : OP_SQ_BRACKET( SEP)?( exp( SEP)? COMMA( SEP)?)*( exp)?( SEP)? CL_SQ_BRACKET", priority = 24)
