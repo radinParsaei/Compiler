@@ -727,6 +727,7 @@ public class Compiler extends CompilerBase {
 					serializer.serialize(serializeFileName, (ProgramBase) result.getTokens().get(0).getObject());
 				}
 			}
+			SyntaxTree.declareNativeFunction("input", "input", 0);
 			boolean addRandInt = !SyntaxTree.getFunctions().containsKey("randint:N#2#random");
 			if (addRandInt) SyntaxTree.declareNativeFunction("random", "randint", 2);
 			result.getTokens().get(0).setObject(new SyntaxTree.Programs(
