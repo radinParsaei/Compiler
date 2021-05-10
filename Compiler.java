@@ -301,13 +301,13 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Variable(parser.getTokens().get(0).getText());
 	}
 
-	@ParserEvent(map = "exp : exp E exp", priority = 14)
+	@ParserEvent(map = "exp : exp E exp(?! DOT)", priority = 14)
 	public Object exponentiation(Parser parser) {
 		setCounter(13);
 		return new SyntaxTree.Pow((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp OP1 exp", priority = 15)
+	@ParserEvent(map = "exp : exp OP1 exp(?! DOT)", priority = 15)
 	public Object multiplyAndDivideAndRemainder(Parser parser) {
 		setCounter(13);
 		if (parser.getTokens().get(1).getText().equals("*")) {
@@ -319,7 +319,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Div((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp OP2 exp", priority = 16)
+	@ParserEvent(map = "exp : exp OP2 exp(?! DOT)", priority = 16)
 	public Object additionAndSubtraction(Parser parser) {
 		setCounter(13);
 		if (parser.getTokens().get(1).getText().equals("+")) {
@@ -328,7 +328,7 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Sub((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp COMP exp", priority = 17)
+	@ParserEvent(map = "exp : exp COMP exp(?! DOT)", priority = 17)
 	public Object comparison(Parser parser) {
 		setCounter(13);
 		switch (parser.getTokens().get(1).getText()) {
@@ -360,7 +360,7 @@ public class Compiler extends CompilerBase {
 		}
 	}
 
-	@ParserEvent(map = "exp : exp OP3 exp", priority = 18)
+	@ParserEvent(map = "exp : exp OP3 exp(?! DOT)", priority = 18)
 	public Object bitwiseAnd(Parser parser) {
 		setCounter(13);
 		switch (parser.getTokens().get(1).getText()) {

@@ -44,11 +44,11 @@ public class Web {
                     }
                 }
             }
-            if (compiler.getCounter() == 14) parser.on("exp OP1 exp", "exp", compiler::multiplyAndDivideAndRemainder);
-            if (compiler.getCounter() == 15) parser.on("exp E exp", "exp", compiler::exponentiation);
-            if (compiler.getCounter() == 16) parser.on("exp OP2 exp", "exp", compiler::additionAndSubtraction);
-            if (compiler.getCounter() == 17) parser.on("exp COMP exp", "exp", compiler::comparison);
-            if (compiler.getCounter() == 18) parser.on("exp OP3 exp", "exp", compiler::bitwiseAnd);
+            if (compiler.getCounter() == 14) parser.on("exp OP1 exp(?! DOT)", "exp", compiler::multiplyAndDivideAndRemainder);
+            if (compiler.getCounter() == 15) parser.on("exp E exp(?! DOT)", "exp", compiler::exponentiation);
+            if (compiler.getCounter() == 16) parser.on("exp OP2 exp(?! DOT)", "exp", compiler::additionAndSubtraction);
+            if (compiler.getCounter() == 17) parser.on("exp COMP exp(?! DOT)", "exp", compiler::comparison);
+            if (compiler.getCounter() == 18) parser.on("exp OP3 exp(?! DOT)", "exp", compiler::bitwiseAnd);
             if (compiler.getCounter() == 19) parser.on("new OP_PAREN ((exp COMMA )*exp )?CL_PAREN", "exp", compiler::createInstance1);
             if (compiler.getCounter() == 20) parser.on("exp (OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET( SEP)? )+SET( SEP)? exp SEP", "program", compiler::setInArray);
             if (compiler.getCounter() == 21) parser.on("exp OP_SQ_BRACKET( SEP)? exp( SEP)? CL_SQ_BRACKET", "exp", compiler::getFromArray);
