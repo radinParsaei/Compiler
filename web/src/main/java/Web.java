@@ -60,7 +60,7 @@ public class Web {
             if (compiler.getCounter() == 25) parser.on("exp ! OP_PAREN (exp )?(COMMA exp )*CL_PAREN", "exp", compiler::callFunctionFromPointer);
             if (compiler.getCounter() == 26) parser.on("inc exp( SEP)?", "program", compiler::increaseAndOthers1);
             if (compiler.getCounter() == 27) {
-                parser.on("! exp", "exp", compiler::not);
+                parser.on("(!|~) exp", "exp", compiler::not);
             }
             if (compiler.getCounter() == 28) {
                 parser.on("((VAR )?set exp|vard( exp)?|exp DOT set exp) SEP", "program", compiler::setVariable);

@@ -93,6 +93,8 @@ public class Compiler extends CompilerBase {
 		lexer.add("FOR", "for ");
 		//exclamation
 		lexer.add("!", "!");
+		//bitwise not sign(~)
+		lexer.add("~", "~");
 		//if (keyword)
 		lexer.add("IF", "if ");
 		//else (keyword)
@@ -554,10 +556,13 @@ public class Compiler extends CompilerBase {
 		return null;
 	}
 
-	@ParserEvent(map = "exp : ! exp", priority = 27)
+	@ParserEvent(map = "exp : (!|~) exp", priority = 27)
 	public Object not(Parser parser) {
 		setCounter(13);
-		return new SyntaxTree.Not((ValueBase) parser.getTokens().get(1).getObject());
+		if (parser.getTokens().get(0).getText().equals("!"))
+			return new SyntaxTree.Not((ValueBase) parser.getTokens().get(1).getObject());
+		else
+			return new SyntaxTree.BitwiseNot((ValueBase) parser.getTokens().get(1).getObject());
 	}
 
 	@ParserEvent(map = "program : ((VAR )?set exp|vard( exp)?|exp DOT set exp) SEP", priority = 28)
