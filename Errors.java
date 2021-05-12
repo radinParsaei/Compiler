@@ -45,5 +45,6 @@ public class Errors {
         break;
     }
     if (!Targets.isWeb) System.exit(1);
+    else new SyntaxTree.Exit(null).eval();
   }
 }
