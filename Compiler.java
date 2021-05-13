@@ -826,6 +826,7 @@ public class Compiler extends CompilerBase {
 	}
 
 	public static void syntaxError(String line) {
+		if (Targets.isWeb) Targets.error("ERROR:\t" + line);
 		System.err.println("ERROR:\t" + line);
 	}
 }

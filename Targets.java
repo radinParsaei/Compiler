@@ -14,4 +14,5 @@ public class Targets {
     }
 
     public static void print(ValueBase value) {}
+    public static void error(String value) {}
 }

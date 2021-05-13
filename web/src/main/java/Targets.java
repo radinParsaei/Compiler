@@ -19,6 +19,15 @@ public class Targets {
     }
 
     public static final boolean customWhile = false;
+
+    public static void error(String error) {
+        HTMLDocument document = HTMLDocument.current();
+        HTMLElement htmlParagraphElement = document.createElement("div");
+        htmlParagraphElement.setInnerHTML("<img src=\"error.png\" height=\"20\"/><span style=\"position: absolute\">&nbsp;" + error.replace("\n", "<br>").replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;") + "</span>");
+        htmlParagraphElement.setAttribute("style", "color: #f55; position: relative");
+        document.getElementById("console2").appendChild(htmlParagraphElement);
+    }
+
     public interface CustomWhileInterface {
         boolean run();
     }
