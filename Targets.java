@@ -5,6 +5,10 @@ public class Targets {
     public static final boolean isInThread = false;
     public static final boolean useAnalyzer = false;
 
+    public static void tokenizerError(int i, String line) {
+        //empty! this function used just when targeting web(via teaVM)
+    }
+
     public interface CustomWhileInterface {
         boolean run();
     }

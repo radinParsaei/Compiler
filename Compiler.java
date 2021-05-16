@@ -813,12 +813,13 @@ public class Compiler extends CompilerBase {
 	}
 
 	public static void syntaxError(int errorChar, String line) {
-		for (int i = 0; i < line.length(); i++) {
-			if (line.charAt(i) == '\n') {
-				errorChar++;
-			}
-		}
-		System.err.println(line.replace("\n", "\\n"));
+		int lineStart = line.lastIndexOf("\n", errorChar) + 1;
+		line = line.substring(0, line.indexOf("\n", errorChar));
+		long lineNumber = line.codePoints().filter(ch -> ch == '\n').count() + 1;
+		line = line.substring(lineStart);
+		System.err.println("error at line: " + lineNumber);
+		errorChar -= lineStart;
+		System.err.println(line);
 		for(; errorChar > 0; errorChar--) {
 			System.err.print(" ");
 		}
