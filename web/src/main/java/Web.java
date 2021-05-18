@@ -4,7 +4,7 @@ public class Web {
     public static void parse(Parser parser, Compiler compiler) {
         parser.on("SEP SEP", "SEP", (parser1) -> null);
         parser.setSaveTexts(true);
-        for (compiler.setCounter(0); compiler.getCounter() < 40; compiler.increaseCounter()) {
+        for (compiler.setCounter(0); compiler.getCounter() < 41; compiler.increaseCounter()) {
             if (compiler.getCounter() == 0) parser.on("IMPORT TXT SEP", "program", compiler::_import);
             if (compiler.getCounter() == 1) parser.on("NUM", "exp", compiler::number);
             if (compiler.getCounter() == 2) parser.on("TXT", "exp", compiler::text);
