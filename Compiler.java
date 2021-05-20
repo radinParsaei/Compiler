@@ -837,6 +837,7 @@ public class Compiler extends CompilerBase {
 				((ProgramBase)result.getTokens().get(0).getObject()).eval();
 				if (Targets.isWeb) System.out.println("\nCode Running Done");
 			}
+			SyntaxTree.deleteNativeFunction("input", "input", 0);
 		} else {
 			System.out.println("Syntax is:\n" + result);
 			syntaxError("Syntax Error");
