@@ -154,7 +154,7 @@ public class Compiler extends CompilerBase {
 	}
 
 	private void evalImportedProgram(ProgramBase object) {
-		if (object instanceof SyntaxTree.Function || object instanceof SyntaxTree.SetVariable) {
+		if (object instanceof SyntaxTree.Function || object instanceof SyntaxTree.SetVariable || object instanceof SyntaxTree.CreateClass || object instanceof SyntaxTree.Import) {
 			object.eval();
 		} else if (object instanceof SyntaxTree.Programs) {
 			for (ProgramBase program : ((SyntaxTree.Programs) object).getPrograms()) {
@@ -498,6 +498,12 @@ public class Compiler extends CompilerBase {
 			}
 			SyntaxTree.declareNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
 			return new SyntaxTree.Null();
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("deleteNativeFunction") && args.length == 3) {
+			if (!(args[0] instanceof SyntaxTree.Text && args[1] instanceof SyntaxTree.Text && args[2] instanceof SyntaxTree.Number)) {
+				syntaxError("USE deleteNativeFunction(TEXT, TEXT, NUMBER)");
+			}
+			SyntaxTree.deleteNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
+			return new SyntaxTree.Null();
 		} else if ((parser.getTokens().get(0).getObject()).toString().equals("print") && args.length == 1) {
 			return new SyntaxTree.PrintFunction(new SyntaxTree.Print(args[0]));
 		} else if ((parser.getTokens().get(0).getObject()).toString().equals("exit") && (args.length == 1 || args.length == 0)) {
@@ -506,6 +512,12 @@ public class Compiler extends CompilerBase {
 			return new SyntaxTree.ExitFunction(new SyntaxTree.Exit(args[0]));
 		} else {
 			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(0).getObject(), args);
+			String tmp1 = parser.getTokens().get(0).getObject() + ":N#" + args.length + "#";
+			for (String key : SyntaxTree.getFunctions().keySet()) {
+				if (key.startsWith(tmp1)) {
+					res.findFunction();
+				}
+			}
 		}
 		return res;
 	}
