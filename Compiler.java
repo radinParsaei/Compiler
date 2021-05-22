@@ -141,7 +141,19 @@ public class Compiler extends CompilerBase {
 		result.on("THIS", "exp", (parser) -> new SyntaxTree.This());
 		SyntaxTree.Import.doImport = fileName1 -> {
 			File file = new File(fileName1);
-			if (file.exists()) {
+			if (fileName1.equals("random")) {
+				SyntaxTree.declareNativeFunction("random", "randint", 2);
+				SyntaxTree.declareNativeFunction("random", "random", 0);
+				SyntaxTree.declareNativeFunction("random", "seed", 1);
+				SyntaxTree.CallFunction callFunction = new SyntaxTree.CallFunction("seed", new SyntaxTree.Variable("a"));
+				callFunction.findFunction();
+				new SyntaxTree.Function("randomSeed", new SyntaxTree.ExecuteValue(callFunction), "a").eval();
+				SyntaxTree.CallFunction callFunction1 = new SyntaxTree.CallFunction("randint", new SyntaxTree.Variable("a"), new SyntaxTree.Variable("b"));
+				callFunction1.findFunction();
+				new SyntaxTree.Function("random", new SyntaxTree.Return(callFunction1), "a", "b").eval();
+				SyntaxTree.deleteNativeFunction("random", "seed", 1);
+				SyntaxTree.deleteNativeFunction("random", "randint", 2);
+			} else if (file.exists()) {
 				parsingImportedFile = true;
 				evalImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName1,false, null, null, null, null)).getTokens().get(0).getObject()));
 				parsingImportedFile = false;
