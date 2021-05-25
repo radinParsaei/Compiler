@@ -56,6 +56,11 @@ public class Targets {
         document.getElementById("console2").appendChild(htmlParagraphElement);
     }
 
+    public static String readFile(String fileName) {
+        error("this version of the compiler can't read any file (if you are using import, tryout: https://radinparsaei.github.io/Blockly-test)");
+        return "";
+    }
+
     public interface CustomWhileInterface {
         boolean run();
     }

@@ -53,20 +53,21 @@ public class Compiler extends CompilerBase {
 				if (!Targets.isWeb) System.exit(0);
 			}
 		}
-		if (!Targets.isWeb) {
-			File file = new File(fileName);
-			Scanner scanner = null;
-			try {
-				scanner = new Scanner(file);
-			} catch (FileNotFoundException e) {
-				System.err.println("Can't open the file");
-				System.exit(1);
-			}
-			scanner.useDelimiter("\\Z");
-			return scanner.next() + "\n";
-		} else {
-			return "";
-		}
+//		if (!Targets.isWeb) {
+//			File file = new File(fileName);
+//			Scanner scanner = null;
+//			try {
+//				scanner = new Scanner(file);
+//			} catch (FileNotFoundException e) {
+//				System.err.println("Can't open the file");
+//				System.exit(1);
+//			}
+//			scanner.useDelimiter("\\Z");
+//			return scanner.next() + "\n";
+//		} else {
+//			return "";
+//		}
+		return Targets.readFile(fileName);
 	}
 
 	public void initLexer(Lexer lexer) {
@@ -140,7 +141,6 @@ public class Compiler extends CompilerBase {
 	public void afterLex(Parser result) {
 		result.on("THIS", "exp", (parser) -> new SyntaxTree.This());
 		SyntaxTree.Import.doImport = fileName1 -> {
-			File file = new File(fileName1);
 			if (fileName1.equals("random")) {
 				SyntaxTree.declareNativeFunction("random", "randint", 2);
 				SyntaxTree.declareNativeFunction("random", "random", 0);
@@ -153,13 +153,10 @@ public class Compiler extends CompilerBase {
 				new SyntaxTree.Function("random", new SyntaxTree.Return(callFunction1), "a", "b").eval();
 				SyntaxTree.deleteNativeFunction("random", "seed", 1);
 				SyntaxTree.deleteNativeFunction("random", "randint", 2);
-			} else if (file.exists()) {
+			} else {
 				parsingImportedFile = true;
 				evalImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName1,false, null, null, null, null)).getTokens().get(0).getObject()));
 				parsingImportedFile = false;
-			} else {
-				syntaxError("file " + fileName1 + " does not exists");
-				new SyntaxTree.Exit(new SyntaxTree.Number(1)).eval();
 			}
 			return new SyntaxTree.Programs();
 		};
