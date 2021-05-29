@@ -11,7 +11,7 @@ public class Compiler extends CompilerBase {
 	private final String compiledFileName;
 	private final String serializeFileName;
 	private final String classFileName;
-	private static boolean parsingImportedFile = false;
+	static boolean parsingImportedFile = false;
 
 	public Compiler(String fileName, boolean isShell, String compiledFileName, String classFileName, String serializeFileName, String xmlOutput) {
 		this.fileName = fileName;
@@ -155,19 +155,23 @@ public class Compiler extends CompilerBase {
 				SyntaxTree.deleteNativeFunction("random", "randint", 2);
 			} else {
 				parsingImportedFile = true;
-				evalImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName1,false, null, null, null, null)).getTokens().get(0).getObject()));
+				ArrayList<ProgramBase> result1 = new ArrayList<>();
+				filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName1,false, null, null, null, null)).getTokens().get(0).getObject()), result1);
 				parsingImportedFile = false;
+				ProgramBase[] resultArray = new ProgramBase[result1.size()];
+				resultArray = result1.toArray(resultArray);
+				return new SyntaxTree.Programs(resultArray);
 			}
 			return new SyntaxTree.Programs();
 		};
 	}
 
-	private void evalImportedProgram(ProgramBase object) {
+	private void filterImportedProgram(ProgramBase object, ArrayList<ProgramBase> result) {
 		if (object instanceof SyntaxTree.Function || object instanceof SyntaxTree.SetVariable || object instanceof SyntaxTree.CreateClass || object instanceof SyntaxTree.Import) {
-			object.eval();
+			result.add(object);
 		} else if (object instanceof SyntaxTree.Programs) {
 			for (ProgramBase program : ((SyntaxTree.Programs) object).getPrograms()) {
-				evalImportedProgram(program);
+				filterImportedProgram(program, result);
 			}
 		}
 	}

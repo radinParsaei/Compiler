@@ -74,6 +74,7 @@ public class Client extends CompilerMain {
                 case "BOOL":
                 case "NULL":
                 case "CLASS":
+                case "IMPORT":
                 case "INIT":
                 case "THIS":
                 case "NEW":
