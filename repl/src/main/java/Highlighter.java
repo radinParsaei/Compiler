@@ -50,6 +50,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
                     case "WH":
                     case "FOR":
                     case "THIS":
+                    case "STATIC":
                     case "INIT":
                     case "NEW":
                     case "BR":

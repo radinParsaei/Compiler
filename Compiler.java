@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.math.BigDecimal;
 
@@ -12,6 +13,7 @@ public class Compiler extends CompilerBase {
 	private final String serializeFileName;
 	private final String classFileName;
 	static boolean parsingImportedFile = false;
+	private static final HashMap<String, SyntaxTree.Programs> importedFiles = new HashMap<>();
 
 	public Compiler(String fileName, boolean isShell, String compiledFileName, String classFileName, String serializeFileName, String xmlOutput) {
 		this.fileName = fileName;
@@ -104,6 +106,8 @@ public class Compiler extends CompilerBase {
 		lexer.add("ELSE", "else");
 		//class (keyword)
 		lexer.add("CLASS", "class ");
+		//static (keyword)
+		lexer.add("STATIC", "static ");
 		//this (keyword)
 		lexer.add("THIS", "this");
 		//init (keyword)
@@ -154,13 +158,7 @@ public class Compiler extends CompilerBase {
 				SyntaxTree.deleteNativeFunction("random", "seed", 1);
 				SyntaxTree.deleteNativeFunction("random", "randint", 2);
 			} else {
-				parsingImportedFile = true;
-				ArrayList<ProgramBase> result1 = new ArrayList<>();
-				filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName1,false, null, null, null, null)).getTokens().get(0).getObject()), result1);
-				parsingImportedFile = false;
-				ProgramBase[] resultArray = new ProgramBase[result1.size()];
-				resultArray = result1.toArray(resultArray);
-				return new SyntaxTree.Programs(resultArray);
+				return importedFiles.get(fileName1);
 			}
 			return new SyntaxTree.Programs();
 		};
@@ -215,7 +213,15 @@ public class Compiler extends CompilerBase {
 	@ParserEvent(map = "program : IMPORT TXT SEP", priority = 0)
 	public Object _import(Parser parser) {
 		parser.on("TXT", "exp", this::text);
-		return new SyntaxTree.Import(parser.getTokens().get(1).getObject().toString());
+		String fileName = parser.getTokens().get(1).getObject().toString();
+		parsingImportedFile = true;
+		ArrayList<ProgramBase> result1 = new ArrayList<>();
+		filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName,false, null, null, null, null)).getTokens().get(0).getObject()), result1);
+		parsingImportedFile = false;
+		ProgramBase[] resultArray = new ProgramBase[result1.size()];
+		resultArray = result1.toArray(resultArray);
+		importedFiles.put(fileName, new SyntaxTree.Programs(resultArray));
+		return new SyntaxTree.Import(fileName);
 	}
 
 	@ParserEvent(map = "exp : NUM", priority = 1)
@@ -274,7 +280,9 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "class : CLASS ID", priority = 7)
 	public Object createClass(Parser parser) {
-		return parser.getTokens().get(1).getText();
+		String name = parser.getTokens().get(1).getText();
+		SyntaxTree.getClassesParameters().put(name, null);
+		return name;
 	}
 
 	@ParserEvent(map = "fn : (FN ID|INIT) OP_PAREN( vard| ID)?", priority = 8)
@@ -339,6 +347,28 @@ public class Compiler extends CompilerBase {
 					((SyntaxTree.CallFunction) data).fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
 				}
 				return data;
+			}
+			String name = null;
+			if (parser.getTokens().get(0).getObject() instanceof SyntaxTree.Variable)
+				name = ((SyntaxTree.Variable) parser.getTokens().get(0).getObject()).getVariableName();
+			if (parser.getTokens().get(0).getObject() instanceof SyntaxTree.Variable &&
+					SyntaxTree.getClassesParameters().containsKey(name)) {
+				String finalName = name;
+				return new SyntaxTree.AwaitedValue(() -> {
+					boolean staticParameterExists = false;
+					for (String string : SyntaxTree.staticParameters) {
+						if (string.startsWith("#C" + finalName + parser.getTokens().get(1).getText())) {
+							staticParameterExists = true;
+							break;
+						}
+					}
+					if (staticParameterExists) {
+						return new SyntaxTree.Variable("#C" + finalName + parser.getTokens().get(1).getText());
+					} else {
+						return new SyntaxTree.Variable(parser.getTokens().get(1).getText()).fromInstance((ValueBase) parser.getTokens().get(0).getObject())
+								.setAddInstanceName(true);
+					}
+				});
 			}
 			return new SyntaxTree.Variable(parser.getTokens().get(1).getText()).fromInstance((ValueBase) parser.getTokens().get(0).getObject())
 					.setAddInstanceName(true);
@@ -503,8 +533,31 @@ public class Compiler extends CompilerBase {
 		}
 		SyntaxTree.CallFunction res;
 		if (parser.getTokens().get(0).getName().equals("exp")) {
-			res = new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
-					.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+			String name = null;
+			if (parser.getTokens().get(0).getObject() instanceof SyntaxTree.Variable)
+				name = ((SyntaxTree.Variable) parser.getTokens().get(0).getObject()).getVariableName();
+			if (parser.getTokens().get(0).getObject() instanceof SyntaxTree.Variable &&
+					SyntaxTree.getClassesParameters().containsKey(name)) {
+				String finalName = name;
+				return new SyntaxTree.AwaitedValue(() -> {
+					boolean staticFunctionExists = false;
+					for (String string : SyntaxTree.staticFunctions) {
+						if (string.startsWith("#C" + finalName + parser.getTokens().get(2).getObject() + ":")) {
+							staticFunctionExists = true;
+							break;
+						}
+					}
+					if (staticFunctionExists) {
+						return new SyntaxTree.CallFunction("#C" + finalName + parser.getTokens().get(2).getObject(), args);
+					} else {
+						return new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
+								.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+					}
+				});
+			} else {
+				res = new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
+						.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+			}
 		} else if ((parser.getTokens().get(0).getObject()).toString().equals("declareNativeFunction") && args.length == 3) {
 			if (!(args[0] instanceof SyntaxTree.Text && args[1] instanceof SyntaxTree.Text && args[2] instanceof SyntaxTree.Number)) {
 				syntaxError("USE declareNativeFunction(TEXT, TEXT, NUMBER)");
@@ -620,11 +673,36 @@ public class Compiler extends CompilerBase {
 			return new SyntaxTree.BitwiseNot((ValueBase) parser.getTokens().get(1).getObject());
 	}
 
-	@ParserEvent(map = "program : ((VAR )?set exp|vard( exp)?|exp DOT set exp) SEP", priority = 29)
+	@ParserEvent(map = "program : (((STATIC )?VAR )?set exp|(STATIC )?vard( exp)?|exp DOT set exp) SEP", priority = 29)
 	public Object setVariable(Parser parser) {
+		boolean isStatic = parser.getTokens().get(0).getName().equals("STATIC");
+		parser.remove("STATIC");
 		if (parser.getTokens().get(0).getName().equals("exp")) {
-			return new SyntaxTree.SetVariable((String) parser.getTokens().get(2).getObject()
-					, (ValueBase) parser.getTokens().get(3).getObject())
+			String name = null;
+			if (parser.getTokens().get(0).getObject() instanceof SyntaxTree.Variable)
+				name = ((SyntaxTree.Variable) parser.getTokens().get(0).getObject()).getVariableName();
+			if (parser.getTokens().get(0).getObject() instanceof SyntaxTree.Variable &&
+					SyntaxTree.getClassesParameters().containsKey(name)) {
+				String finalName = name;
+				return new SyntaxTree.AwaitedProgram(() -> {
+					boolean staticFunctionExists = false;
+					for (String string : SyntaxTree.staticFunctions) {
+						if (string.startsWith("#C" + finalName + parser.getTokens().get(2).getObject())) {
+							staticFunctionExists = true;
+							break;
+						}
+					}
+					if (staticFunctionExists) {
+						return new SyntaxTree.SetVariable("#C" + finalName + parser.getTokens().get(2).getObject(), (ValueBase) parser.getTokens().get(3).getObject());
+					} else {
+						return new SyntaxTree.SetVariable((String) parser.getTokens().get(2).getObject(),
+								(ValueBase) parser.getTokens().get(3).getObject())
+								.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
+					}
+				});
+			}
+			return new SyntaxTree.SetVariable((String) parser.getTokens().get(2).getObject(),
+					(ValueBase) parser.getTokens().get(3).getObject())
 					.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
 		}
 		if (parser.getTokens().get(0).getName().equals("vard")) {
@@ -634,10 +712,10 @@ public class Compiler extends CompilerBase {
 			} else {
 				value = new SyntaxTree.Null();
 			}
-			return new SyntaxTree.SetVariable((String) parser.getTokens().get(0).getObject(), value, true, true);
+			return new SyntaxTree.SetVariable((String) parser.getTokens().get(0).getObject(), value, true, true).setStatic(isStatic);
 		} else if (parser.getTokens().get(0).getName().equals("VAR")) {
 			return new SyntaxTree.SetVariable((String) parser.getTokens().get(1).getObject(),
-					(ValueBase) parser.getTokens().get(2).getObject(), true, true);
+					(ValueBase) parser.getTokens().get(2).getObject(), true, true).setStatic(isStatic);
 		}
 		return new SyntaxTree.SetVariable((String) parser.getTokens().get(0).getObject(),
 				(ValueBase) parser.getTokens().get(1).getObject(), false, true);
@@ -724,10 +802,12 @@ public class Compiler extends CompilerBase {
 		return _if;
 	}
 
-	@ParserEvent(map = "program : fn CL_PAREN (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 37)
+	@ParserEvent(map = "program : (STATIC )?fn CL_PAREN (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 37)
 	public Object funcDeclaration(Parser parser) {
 		setCounter(33);
 		parser.remove("SEP");
+		boolean isStatic = parser.getTokens().get(0).getName().equals("STATIC");
+		parser.remove("STATIC");
 		ArrayList<String> stringArrayList = (ArrayList<String>)parser.getTokens().get(0).getObject();
 		String functionName = stringArrayList.get(0);
 		stringArrayList.remove(0);
@@ -736,7 +816,7 @@ public class Compiler extends CompilerBase {
 			args[i] = stringArrayList.get(i);
 		}
 		return new SyntaxTree.Function(functionName,
-				parser.getTokens().get(3).getName().equals("program")?(ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs(), args);
+				parser.getTokens().get(3).getName().equals("program")?(ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs(), args).setStatic(isStatic);
 	}
 
 	@ParserEvent(map = "exp : (OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?(program )?CL_BRACKET", priority = 38)
@@ -754,7 +834,8 @@ public class Compiler extends CompilerBase {
 	public Object createClass1(Parser parser) {
 		setCounter(33);
 		parser.remove("SEP");
-		return new SyntaxTree.CreateClass((String) parser.getTokens().get(0).getObject(), (ProgramBase) parser.getTokens().get(2).getObject());
+		new SyntaxTree.CreateClass((String) parser.getTokens().get(0).getObject(), (ProgramBase) parser.getTokens().get(2).getObject()).eval();
+		return new SyntaxTree.Programs();
 	}
 
 	@ParserEvent(map = "program : exp SEP", priority = 40)

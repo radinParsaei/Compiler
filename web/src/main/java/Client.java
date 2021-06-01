@@ -19,6 +19,7 @@ public class Client extends CompilerMain {
                 SyntaxTree.getFunctions().clear();
                 SyntaxTree.getVariables().clear();
                 SyntaxTree.getClassesParameters().clear();
+                SyntaxTree.staticFunctions.clear();
                 SyntaxTree.CreateLambda.setCounter(0);
                 SyntaxTree.resetNameSpaces();
                 document.getElementById("console2").setInnerHTML("");
@@ -80,6 +81,7 @@ public class Client extends CompilerMain {
                 case "NEW":
                 case "RET":
                 case "BR":
+                case "STATIC":
                 case "CON":
                 case "WH":
                 case "FOR":
