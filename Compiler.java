@@ -836,8 +836,7 @@ public class Compiler extends CompilerBase {
 	public Object createClass1(Parser parser) {
 		setCounter(33);
 		parser.remove("SEP");
-		new SyntaxTree.CreateClass((String) parser.getTokens().get(0).getObject(), (ProgramBase) parser.getTokens().get(2).getObject()).eval();
-		return new SyntaxTree.Programs();
+		return new SyntaxTree.CreateClass((String) parser.getTokens().get(0).getObject(), (ProgramBase) parser.getTokens().get(2).getObject());
 	}
 
 	@ParserEvent(map = "program : exp SEP", priority = 40)
