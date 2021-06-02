@@ -214,13 +214,15 @@ public class Compiler extends CompilerBase {
 	public Object _import(Parser parser) {
 		parser.on("TXT", "exp", this::text);
 		String fileName = parser.getTokens().get(1).getObject().toString();
-		parsingImportedFile = true;
-		ArrayList<ProgramBase> result1 = new ArrayList<>();
-		filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName,false, null, null, null, null)).getTokens().get(0).getObject()), result1);
-		parsingImportedFile = false;
-		ProgramBase[] resultArray = new ProgramBase[result1.size()];
-		resultArray = result1.toArray(resultArray);
-		importedFiles.put(fileName, new SyntaxTree.Programs(resultArray));
+		if (!fileName.equals("random")) {
+			parsingImportedFile = true;
+			ArrayList<ProgramBase> result1 = new ArrayList<>();
+			filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName, false, null, null, null, null)).getTokens().get(0).getObject()), result1);
+			parsingImportedFile = false;
+			ProgramBase[] resultArray = new ProgramBase[result1.size()];
+			resultArray = result1.toArray(resultArray);
+			importedFiles.put(fileName, new SyntaxTree.Programs(resultArray));
+		}
 		return new SyntaxTree.Import(fileName);
 	}
 
@@ -357,13 +359,13 @@ public class Compiler extends CompilerBase {
 				return new SyntaxTree.AwaitedValue(() -> {
 					boolean staticParameterExists = false;
 					for (String string : SyntaxTree.staticParameters) {
-						if (string.startsWith("#C" + finalName + parser.getTokens().get(1).getText())) {
+						if (string.startsWith("#C" + finalName + "#" + parser.getTokens().get(1).getText())) {
 							staticParameterExists = true;
 							break;
 						}
 					}
 					if (staticParameterExists) {
-						return new SyntaxTree.Variable("#C" + finalName + parser.getTokens().get(1).getText());
+						return new SyntaxTree.Variable("#C" + finalName + "#" + parser.getTokens().get(1).getText());
 					} else {
 						return new SyntaxTree.Variable(parser.getTokens().get(1).getText()).fromInstance((ValueBase) parser.getTokens().get(0).getObject())
 								.setAddInstanceName(true);
@@ -542,13 +544,13 @@ public class Compiler extends CompilerBase {
 				return new SyntaxTree.AwaitedValue(() -> {
 					boolean staticFunctionExists = false;
 					for (String string : SyntaxTree.staticFunctions) {
-						if (string.startsWith("#C" + finalName + parser.getTokens().get(2).getObject() + ":")) {
+						if (string.startsWith("#C" + finalName + "#" + parser.getTokens().get(2).getObject() + ":")) {
 							staticFunctionExists = true;
 							break;
 						}
 					}
 					if (staticFunctionExists) {
-						return new SyntaxTree.CallFunction("#C" + finalName + parser.getTokens().get(2).getObject(), args);
+						return new SyntaxTree.CallFunction("#C" + finalName + "#" + parser.getTokens().get(2).getObject(), args);
 					} else {
 						return new SyntaxTree.CallFunction((String) parser.getTokens().get(2).getObject(), args)
 								.fromInstance((ValueBase) parser.getTokens().get(0).getObject()).setAddInstanceName(true);
@@ -687,13 +689,13 @@ public class Compiler extends CompilerBase {
 				return new SyntaxTree.AwaitedProgram(() -> {
 					boolean staticFunctionExists = false;
 					for (String string : SyntaxTree.staticFunctions) {
-						if (string.startsWith("#C" + finalName + parser.getTokens().get(2).getObject())) {
+						if (string.startsWith("#C" + finalName + "#" + parser.getTokens().get(2).getObject())) {
 							staticFunctionExists = true;
 							break;
 						}
 					}
 					if (staticFunctionExists) {
-						return new SyntaxTree.SetVariable("#C" + finalName + parser.getTokens().get(2).getObject(), (ValueBase) parser.getTokens().get(3).getObject());
+						return new SyntaxTree.SetVariable("#C" + finalName + "#" + parser.getTokens().get(2).getObject(), (ValueBase) parser.getTokens().get(3).getObject());
 					} else {
 						return new SyntaxTree.SetVariable((String) parser.getTokens().get(2).getObject(),
 								(ValueBase) parser.getTokens().get(3).getObject())
