@@ -688,7 +688,7 @@ public class Compiler extends CompilerBase {
 				String finalName = name;
 				return new SyntaxTree.AwaitedProgram(() -> {
 					boolean staticFunctionExists = false;
-					for (String string : SyntaxTree.staticFunctions) {
+					for (String string : SyntaxTree.staticParameters) {
 						if (string.startsWith("#C" + finalName + "#" + parser.getTokens().get(2).getObject())) {
 							staticFunctionExists = true;
 							break;
@@ -970,4 +970,3 @@ public class Compiler extends CompilerBase {
 		System.err.println("ERROR:\t" + line);
 	}
 }
-
