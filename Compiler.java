@@ -687,14 +687,14 @@ public class Compiler extends CompilerBase {
 					SyntaxTree.getClassesParameters().containsKey(name)) {
 				String finalName = name;
 				return new SyntaxTree.AwaitedProgram(() -> {
-					boolean staticFunctionExists = false;
+					boolean staticParameterExists = false;
 					for (String string : SyntaxTree.staticParameters) {
 						if (string.startsWith("#C" + finalName + "#" + parser.getTokens().get(2).getObject())) {
-							staticFunctionExists = true;
+							staticParameterExists = true;
 							break;
 						}
 					}
-					if (staticFunctionExists) {
+					if (staticParameterExists) {
 						return new SyntaxTree.SetVariable("#C" + finalName + "#" + parser.getTokens().get(2).getObject(), (ValueBase) parser.getTokens().get(3).getObject());
 					} else {
 						return new SyntaxTree.SetVariable((String) parser.getTokens().get(2).getObject(),
@@ -714,8 +714,14 @@ public class Compiler extends CompilerBase {
 			} else {
 				value = new SyntaxTree.Null();
 			}
+			if (SyntaxTree.getClassesParameters().containsKey(parser.getTokens().get(0).getObject())){
+				syntaxError("a class with this variable name existed: " + parser.getTokens().get(0).getObject());
+			}
 			return new SyntaxTree.SetVariable((String) parser.getTokens().get(0).getObject(), value, true, true).setStatic(isStatic);
 		} else if (parser.getTokens().get(0).getName().equals("VAR")) {
+			if (SyntaxTree.getClassesParameters().containsKey(parser.getTokens().get(1).getObject())){
+				syntaxError("a class with this variable name existed: " + parser.getTokens().get(1).getObject());
+			}
 			return new SyntaxTree.SetVariable((String) parser.getTokens().get(1).getObject(),
 					(ValueBase) parser.getTokens().get(2).getObject(), true, true).setStatic(isStatic);
 		}
@@ -832,11 +838,11 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Lambda(new SyntaxTree.CreateLambda(parser.getTokens().get(2).getName().equals("program")? (ProgramBase) parser.getTokens().get(2).getObject():new SyntaxTree.Programs(), args));
 	}
 
-	@ParserEvent(map = "program : class (SEP )?OP_BRACKET (SEP )?program CL_BRACKET", priority = 39)
+	@ParserEvent(map = "program : class (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET", priority = 39)
 	public Object createClass1(Parser parser) {
 		setCounter(33);
 		parser.remove("SEP");
-		return new SyntaxTree.CreateClass((String) parser.getTokens().get(0).getObject(), (ProgramBase) parser.getTokens().get(2).getObject());
+		return new SyntaxTree.CreateClass((String) parser.getTokens().get(0).getObject(), parser.getTokens().get(2).getObject() instanceof ProgramBase? (ProgramBase) parser.getTokens().get(2).getObject() : new SyntaxTree.Programs());
 	}
 
 	@ParserEvent(map = "program : exp SEP", priority = 40)

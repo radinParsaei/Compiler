@@ -79,7 +79,7 @@ public class Web {
             if (compiler.getCounter() == 37)
                 parser.on("(STATIC )?fn CL_PAREN (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::funcDeclaration);
             if (compiler.getCounter() == 38) parser.on("(OP_PAREN CL_PAREN ARROW|lambda) OP_BRACKET (SEP )?(program )?CL_BRACKET", "exp", compiler::lambda);
-            if (compiler.getCounter() == 39) parser.on("class (SEP )?OP_BRACKET (SEP )?program CL_BRACKET", "program", compiler::createClass1);
+            if (compiler.getCounter() == 39) parser.on("class (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET", "program", compiler::createClass1);
             if (compiler.getCounter() == 40) parser.on("exp SEP", "program", compiler::executeValue);
         }
     }
