@@ -1,5 +1,6 @@
 import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
+import org.w3c.dom.Node;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -58,6 +59,9 @@ public class XMLToSyntaxTree {
                     value = getValueFromNode(getFirstChild(node1));
                 }
                 programs.add(new SyntaxTree.ExecuteValue(value));
+            } else if (getName(node).equals("exit") || getName(node).equals("e")) {
+                JSObject node1 = getFirstChild(node);
+                programs.add(new SyntaxTree.Exit(getValueFromNode(node1)));
             }
             node = nextElement(node);
         }
@@ -79,12 +83,30 @@ public class XMLToSyntaxTree {
             case "null":
             case "nl":
                 return new SyntaxTree.Null();
+            case "list":
+            case "l": {
+                ArrayList<ValueBase> res = new ArrayList<>();
+                JSObject node1 = getFirstChild(node);
+                while (node1 != null) {
+                    if (getName(node1).equals("data") || getName(node1).equals("d"))
+                        res.add(getValueFromNode(getFirstChild(node1)));
+                    node1 = nextElement(node1);
+                }
+                ValueBase[] valuesArray = new ValueBase[res.size()];
+                for (int i = 0; i < res.size(); i++) {
+                    valuesArray[i] = res.get(i);
+                }
+                return new SyntaxTree.List(valuesArray);
+            }
             case "text":
             case "t":
                 return new SyntaxTree.Text(getData(node));
             case "printFunction":
             case "pf":
                 return new SyntaxTree.PrintFunction((SyntaxTree.Print) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
+            case "exitFunction":
+            case "ef":
+                return new SyntaxTree.ExitFunction((SyntaxTree.Exit) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
         }
         return new SyntaxTree.Null();
     }
