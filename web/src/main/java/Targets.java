@@ -11,6 +11,7 @@ public class Targets {
     public static final boolean systemPrint = false;
     public static final boolean useAnalyzer = false;
     public static int count = 0;
+    public static boolean awaitedInput = false;
 
     public static void print(ValueBase value) {
         HTMLDocument document = HTMLDocument.current();

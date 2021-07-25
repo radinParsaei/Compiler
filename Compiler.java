@@ -876,7 +876,28 @@ public class Compiler extends CompilerBase {
 					serializer.serialize(serializeFileName, (ProgramBase) result.getTokens().get(0).getObject());
 				}
 			}
-			SyntaxTree.declareNativeFunction("input", "input", 0);
+			if (Targets.isWeb && Targets.awaitedInput) {
+				SyntaxTree.declareNativeFunction("input", "input", 0);
+				SyntaxTree.declareNativeFunction(".", "runJS_str", 1);
+				SyntaxTree.declareNativeFunction(".", "runJS_int", 1);
+				SyntaxTree.CallFunction input = new SyntaxTree.CallFunction("input");
+				input.findFunction();
+				SyntaxTree.CallFunction getRes = new SyntaxTree.CallFunction("runJS_str", new SyntaxTree.Text("__COMPILER_INPUT"));
+				getRes.findFunction();
+				SyntaxTree.CallFunction resExists = new SyntaxTree.CallFunction("runJS_int", new SyntaxTree.Text("try{__COMPILER_INPUT!=null}catch(e){false}"));
+				resExists.findFunction();
+				SyntaxTree.CallFunction reset = new SyntaxTree.CallFunction("runJS_int", new SyntaxTree.Text("__COMPILER_INPUT = null"));
+				reset.findFunction();
+				SyntaxTree.deleteNativeFunction("input", "input", 0);
+				SyntaxTree.deleteNativeFunction(".", "runJS_str", 1);
+				SyntaxTree.deleteNativeFunction(".", "runJS_int", 1);
+				result.getTokens().get(0).setObject(new SyntaxTree.Programs(
+						new SyntaxTree.Function("input", new SyntaxTree.Programs(new SyntaxTree.ExecuteValue(input), new SyntaxTree.While(new SyntaxTree.Not(resExists), new SyntaxTree.Programs()), new SyntaxTree.SetVariable("tmp", getRes), new SyntaxTree.ExecuteValue(reset), new SyntaxTree.Return(new SyntaxTree.Variable("tmp")))),
+						(ProgramBase) result.getTokens().get(0).getObject()
+				));
+			} else {
+				SyntaxTree.declareNativeFunction("input", "input", 0);
+			}
 			boolean addRandInt = !SyntaxTree.getFunctions().containsKey("randint:N#2#random");
 			if (addRandInt) SyntaxTree.declareNativeFunction("random", "randint", 2);
 			result.getTokens().get(0).setObject(new SyntaxTree.Programs(
