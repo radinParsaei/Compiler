@@ -23,7 +23,7 @@ public class Web {
             if (compiler.getCounter() == 11) parser.on("ID OP_PAREN", "fnc", compiler::functionCall);
             if (compiler.getCounter() == 12) parser.on("OP_PAREN ID( COMMA ID)* CL_PAREN ARROW", "lambda", compiler::lambdaArgs);
             if (compiler.getCounter() == 13) parser.on("ID (OP2|OP1|OP3|E) SET", "inc", compiler::increaseAndOthers);
-            if (compiler.getCounter() == 14) parser.on("ID OP2 OP2", "exp", compiler::incrementAndDecrement);
+            if (compiler.getCounter() == 14) parser.on("ID OP2 OP2|OP2 OP2 ID", "exp", compiler::incrementAndDecrement);
             if (compiler.getCounter() == 15) {
                 parser.on("(exp DOT )?ID|exp DOT (ID|exp)", "exp", compiler::variable);
                 for (int i = 0; i < parser.getTokens().size(); i++) {

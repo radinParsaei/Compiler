@@ -336,12 +336,19 @@ public class Compiler extends CompilerBase {
 		return parser;
 	}
 
-	@ParserEvent(map = "exp : ID OP2 OP2", priority = 14)
+	@ParserEvent(map = "exp : ID OP2 OP2|OP2 OP2 ID", priority = 14)
 	public Object incrementAndDecrement(Parser parser) {
-		if (parser.getTokens().get(1).getText().equals("+"))
-			return new SyntaxTree.Increase(new SyntaxTree.Variable(parser.getTokens().get(0).getText()));
-		else
-			return new SyntaxTree.Decrease(new SyntaxTree.Variable(parser.getTokens().get(0).getText()));
+		if (parser.getTokens().get(0).getName().equals("ID")) {
+			if (parser.getTokens().get(1).getText().equals("+"))
+				return new SyntaxTree.Increase(new SyntaxTree.Variable(parser.getTokens().get(0).getText()), true);
+			else
+				return new SyntaxTree.Decrease(new SyntaxTree.Variable(parser.getTokens().get(0).getText()), true);
+		} else {
+			if (parser.getTokens().get(1).getText().equals("+"))
+				return new SyntaxTree.Increase(new SyntaxTree.Variable(parser.getTokens().get(2).getText()), false);
+			else
+				return new SyntaxTree.Decrease(new SyntaxTree.Variable(parser.getTokens().get(2).getText()), false);
+		}
 	}
 
 	@ParserEvent(map = "exp : (exp DOT )?ID|exp DOT (ID|exp)", priority = 15)
