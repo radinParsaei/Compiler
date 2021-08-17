@@ -13,7 +13,17 @@ public class Compiler extends CompilerBase {
 	private final String serializeFileName;
 	private final String classFileName;
 	static boolean parsingImportedFile = false;
+	private boolean isTestModeOn = false;
+	static String testCode = "";
 	private static final HashMap<String, SyntaxTree.Programs> importedFiles = new HashMap<>();
+
+	public boolean isIsTestModeOn() {
+		return isTestModeOn;
+	}
+
+	public void setIsTestModeOn(boolean isTestModeOn) {
+		this.isTestModeOn = isTestModeOn;
+	}
 
 	public Compiler(String fileName, boolean isShell, String compiledFileName, String classFileName, String serializeFileName, String xmlOutput) {
 		this.fileName = fileName;
@@ -25,6 +35,9 @@ public class Compiler extends CompilerBase {
 	}
 
 	public String getInputCode() {
+		if (isTestModeOn) {
+			return testCode;
+		}
 		if (isShell) {
 			try {
 				String line = REPLReader.readLine();
