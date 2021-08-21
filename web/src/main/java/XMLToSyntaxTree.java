@@ -104,6 +104,36 @@ public class XMLToSyntaxTree {
             case "printFunction":
             case "pf":
                 return new SyntaxTree.PrintFunction((SyntaxTree.Print) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
+            case "add":
+            case "a":
+                return new SyntaxTree.Add(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "sub":
+            case "s":
+                return new SyntaxTree.Sub(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "mul":
+            case "m":
+                return new SyntaxTree.Mul(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "div":
+            case "d":
+                return new SyntaxTree.Div(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "pow":
+            case "p1":
+                return new SyntaxTree.Pow(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "equals":
+            case "eq":
+                return new SyntaxTree.Equals(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "greater-than":
+            case "gt":
+                return new SyntaxTree.GreaterThan(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "lesser-than":
+            case "lt":
+                return new SyntaxTree.LesserThan(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "lesser-than-or-equal":
+            case "le":
+                return new SyntaxTree.LesserThanOrEqual(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "greater-than-or-equal":
+            case "ge":
+                return new SyntaxTree.GreaterThanOrEqual(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
             case "exitFunction":
             case "ef":
                 return new SyntaxTree.ExitFunction((SyntaxTree.Exit) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
