@@ -116,12 +116,18 @@ public class XMLToSyntaxTree {
             case "div":
             case "d":
                 return new SyntaxTree.Div(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "mod":
+            case "m1":
+                return new SyntaxTree.Mod(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
             case "pow":
             case "p1":
                 return new SyntaxTree.Pow(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
             case "equals":
             case "eq":
                 return new SyntaxTree.Equals(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "strict-equals":
+            case "seq":
+                return new SyntaxTree.StrictEquals(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
             case "greater-than":
             case "gt":
                 return new SyntaxTree.GreaterThan(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
@@ -134,6 +140,18 @@ public class XMLToSyntaxTree {
             case "greater-than-or-equal":
             case "ge":
                 return new SyntaxTree.GreaterThanOrEqual(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "and":
+            case "a1":
+                return new SyntaxTree.And(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "or":
+            case "o":
+                return new SyntaxTree.Or(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "bitwise-and":
+            case "ba":
+                return new SyntaxTree.BitwiseAnd(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "bitwise-or":
+            case "bo":
+                return new SyntaxTree.BitwiseOr(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
             case "exitFunction":
             case "ef":
                 return new SyntaxTree.ExitFunction((SyntaxTree.Exit) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
