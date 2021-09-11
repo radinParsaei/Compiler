@@ -52,6 +52,17 @@ public class XMLToSyntaxTree {
                     valuesArray[i] = values.get(i);
                 }
                 programs.add(new SyntaxTree.Print(valuesArray).setSeparator(separator));
+            } else if (getName(node).equals("if") || getName(node).equals("i")) {
+                ProgramBase elseProgram = null;
+                ValueBase condition = getValueFromNode(getFirstChild(getFirstChild(node)));
+                ProgramBase program = xmlToProgram(getFirstChild(nextElement(getFirstChild(node))));
+                try {
+                    elseProgram = xmlToProgram(getFirstChild(nextElement(nextElement(getFirstChild(node)))));
+                } catch (Exception ignore) {
+                }
+                SyntaxTree.If _if = new SyntaxTree.If(condition, program);
+                if (elseProgram != null) _if.addElse(elseProgram);
+                programs.add(_if);
             } else if (getName(node).equals("executeValue") || getName(node).equals("ev")) {
                 ValueBase value = null;
                 JSObject node1 = getFirstChild(node);
@@ -152,6 +163,9 @@ public class XMLToSyntaxTree {
             case "bitwise-or":
             case "bo":
                 return new SyntaxTree.BitwiseOr(getValueFromNode(getFirstChild(getFirstChild(node))), getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))));
+            case "not":
+            case "n1":
+                return new SyntaxTree.Not(getValueFromNode(getFirstChild(node)));
             case "exitFunction":
             case "ef":
                 return new SyntaxTree.ExitFunction((SyntaxTree.Exit) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
