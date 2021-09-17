@@ -21,6 +21,9 @@ public class XMLToSyntaxTree {
     @JSBody(params = { "xml" }, script = "return xml.getAttribute('data');")
     private static native String getData(JSObject xml);
 
+    @JSBody(params = { "xml", "parameter" }, script = "return xml.getAttribute(parameter);")
+    private static native String getParameter(JSObject xml, String parameter);
+
     @JSBody(params = { "xml" }, script = "return xml.nextElementSibling;")
     private static native JSObject nextElement(JSObject xml);
 
@@ -63,6 +66,16 @@ public class XMLToSyntaxTree {
                 SyntaxTree.If _if = new SyntaxTree.If(condition, program);
                 if (elseProgram != null) _if.addElse(elseProgram);
                 programs.add(_if);
+            } else if (getName(node).equals("while") || getName(node).equals("w")) {
+                ValueBase condition = getValueFromNode(getFirstChild(getFirstChild(node)));
+                ProgramBase program = xmlToProgram(getFirstChild(nextElement(getFirstChild(node))));
+                programs.add(new SyntaxTree.While(condition, program));
+            } else if (getName(node).equals("break") || getName(node).equals("br")) {
+                programs.add(new SyntaxTree.Break());
+            } else if (getName(node).equals("continue") || getName(node).equals("con")) {
+                programs.add(new SyntaxTree.Continue());
+            } else if (getName(node).equals("set-variable") || getName(node).equals("set")) {
+                programs.add(new SyntaxTree.SetVariable(getParameter(node, getName(node).equals("set")? "n":"name"), getValueFromNode(getFirstChild(getFirstChild(node)))));
             } else if (getName(node).equals("executeValue") || getName(node).equals("ev")) {
                 ValueBase value = null;
                 JSObject node1 = getFirstChild(node);
@@ -169,6 +182,10 @@ public class XMLToSyntaxTree {
             case "exitFunction":
             case "ef":
                 return new SyntaxTree.ExitFunction((SyntaxTree.Exit) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
+            case "variable":
+            case "v":
+                System.out.println(getNodeValue(node));
+                return new SyntaxTree.Variable(getNodeValue(node));
         }
         return new SyntaxTree.Null();
     }
