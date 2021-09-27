@@ -44,6 +44,28 @@ public class Web {
                         token.setObject(value);
                         parser.getTokens().add(i, token);
                     }
+                    if (parser.getTokens().get(i).getName().equals("FOR") && parser.getTokens().get(i + 1).getName().equals("OP_PAREN")) {
+                        int x = 0;
+                        int j = i + 2;
+                        boolean success = true;
+                        while (x != -1) {
+                            j++;
+                            if (j >= parser.getTokens().size()) {
+                                success = false;
+                                break;
+                            }
+                            if (parser.getTokens().get(j).getName().equals("OP_BRACKET")) {
+                                success = false;
+                                break;
+                            }
+                            if (parser.getTokens().get(j).getName().equals("CL_PAREN")) {
+                                x--;
+                            } else if (parser.getTokens().get(j).getName().equals("OP_PAREN")) {
+                                x++;
+                            }
+                        }
+                        if (success) parser.getTokens().get(j).setName("SEP");
+                    }
                 }
             }
             if (compiler.getCounter() == 16) parser.on("exp OP1 exp(?! DOT)", "exp", compiler::multiplyAndDivideAndRemainder);
@@ -70,11 +92,11 @@ public class Web {
             if (compiler.getCounter() == 31) parser.on("RET (exp )?SEP", "program", compiler::_return);
             if (compiler.getCounter() == 32) parser.on("BR SEP", "program", compiler::_break);
             if (compiler.getCounter() == 33) parser.on("CON SEP", "program", compiler::_continue);
-            if (compiler.getCounter() == 34) parser.on("program (SEP )?(program ?)+", "program", compiler::programs);
-            if (compiler.getCounter() == 35)
-                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_while);
+            if (compiler.getCounter() == 34)
+                parser.on("FOR OP_PAREN program exp( SEP)? program( CL_PAREN)? (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_for);
+            if (compiler.getCounter() == 35) parser.on("program (SEP )?(program ?)+", "program", compiler::programs);
             if (compiler.getCounter() == 36)
-                parser.on("FOR (OP_PAREN )?program exp SEP program (CL_PAREN )?(SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_for);
+                parser.on("WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", "program", compiler::_while);
             if (compiler.getCounter() == 37)
                 parser.on("IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", "program", compiler::_if);
             if (compiler.getCounter() == 38)

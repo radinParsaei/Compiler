@@ -211,6 +211,28 @@ public class Compiler extends CompilerBase {
 						token.setObject(value);
 						parser.getTokens().add(i, token);
 					}
+					if (parser.getTokens().get(i).getName().equals("FOR") && parser.getTokens().get(i + 1).getName().equals("OP_PAREN")) {
+						int x = 0;
+						int j = i + 2;
+						boolean success = true;
+						while (x != -1) {
+							j++;
+							if (j >= parser.getTokens().size()) {
+								success = false;
+								break;
+							}
+							if (parser.getTokens().get(j).getName().equals("OP_BRACKET")) {
+								success = false;
+								break;
+							}
+							if (parser.getTokens().get(j).getName().equals("CL_PAREN")) {
+								x--;
+							} else if (parser.getTokens().get(j).getName().equals("OP_PAREN")) {
+								x++;
+							}
+						}
+						if (success) parser.getTokens().get(j).setName("SEP");
+					}
 				}
 			} else if (getCounter() == 6) {
 				parser.setSingleRunPerLocation(false);
@@ -775,8 +797,23 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Continue();
 	}
 
-	@ParserEvent(map = "program : program (SEP )?(program ?)+", priority = 34)
+	@ParserEvent(map = "program : FOR OP_PAREN program exp( SEP)? program( CL_PAREN)? (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 34)
+	public Object _for(Parser parser) {
+		setCounter(33);
+		parser.remove("SEP");
+		String map = parser.getMap();
+		parser.remove("CL_PAREN");
+		parser.remove("OP_PAREN");
+		return new SyntaxTree.For((ValueBase) parser.getTokens().get(2).getObject(), (ProgramBase) parser.getTokens().get(3).getObject(), (ProgramBase) parser.getTokens().get(1).getObject(), parser.getTokens().get(5).getName().equals("program")? (ProgramBase)parser.getTokens().get(5).getObject():new SyntaxTree.Programs());
+	}
+
+	@ParserEvent(map = "program : program (SEP )?(program ?)+", priority = 35)
 	public Object programs(Parser parser) {
+		try {
+			if (parser.getParent().getTokens().get(parser.getParent().getListIndex() - 2).getName().equals("FOR")) {
+				return null;
+			}
+		} catch (Exception ignored) {}
 		parser.remove("SEP");
 		ProgramBase[] programs = new ProgramBase[parser.getTokens().size()];
 		for (int i = 0; i < programs.length; i++) {
@@ -785,26 +822,11 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Programs(programs);
 	}
 
-	@ParserEvent(map = "program : WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 35)
+	@ParserEvent(map = "program : WH exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 36)
 	public Object _while(Parser parser) {
 		setCounter(33);
 		parser.remove("SEP");
 		return new SyntaxTree.While((ValueBase)parser.getTokens().get(1).getObject(), parser.getTokens().get(3).getName().equals("program")? (ProgramBase)parser.getTokens().get(3).getObject():new SyntaxTree.Programs());
-	}
-
-	@ParserEvent(map = "program : FOR (OP_PAREN )?program exp SEP program (CL_PAREN )?(SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET SEP", priority = 36)
-	public Object _for(Parser parser) {
-		setCounter(33);
-		parser.remove("SEP");
-		String map = parser.getMap();
-		if (map.contains("CL_PAREN") && map.contains("OP_PAREN")) {
-			parser.remove("CL_PAREN");
-			parser.remove("OP_PAREN");
-		} else if (map.contains("CL_PAREN") || map.contains("OP_PAREN")) {
-			syntaxError("use for () {} | for {}");
-			if (!Targets.isWeb) System.exit(1);
-		}
-		return new SyntaxTree.For((ValueBase) parser.getTokens().get(2).getObject(), (ProgramBase) parser.getTokens().get(3).getObject(), (ProgramBase) parser.getTokens().get(1).getObject(), parser.getTokens().get(5).getName().equals("program")? (ProgramBase)parser.getTokens().get(5).getObject():new SyntaxTree.Programs());
 	}
 
 	@ParserEvent(map = "program : IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET( ELSE IF exp (SEP )?OP_BRACKET (SEP )?(program )?CL_BRACKET)*( ELSE( SEP)? OP_BRACKET( SEP)? (program )?CL_BRACKET)? SEP", priority = 37)
@@ -875,6 +897,11 @@ public class Compiler extends CompilerBase {
 
 	@ParserEvent(map = "program : exp SEP", priority = 41)
 	public Object executeValue(Parser parser) {
+		try {
+			if (parser.getParent().getTokens().get(parser.getParent().getListIndex() - 3).getName().equals("FOR")) {
+				return null;
+			}
+		} catch (Exception ignored) {}
 		setCounter(33);
 		return new SyntaxTree.ExecuteValue((ValueBase) parser.getTokens().get(0).getObject());
 	}
