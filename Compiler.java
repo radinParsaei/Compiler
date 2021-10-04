@@ -192,6 +192,7 @@ public class Compiler extends CompilerBase {
 	}
 
 	public void parse(Parser parser) {
+		if (parser.getTokens().get(0).getName().equals("exp")) System.out.println(getCounter());
 		if (!Targets.isWeb) {
 			if (getCounter() == 0) {
 				parser.on("SEP SEP", "SEP", (parser1) -> null);

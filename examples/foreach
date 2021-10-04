@@ -1,0 +1,14 @@
+class Iterable {
+	var i = 0
+	func next() {
+		return i++
+	}
+	func hasNext() {
+		return i != 5
+	}
+}
+
+for i in new Iterable() {
+	print(i)
+}
+
