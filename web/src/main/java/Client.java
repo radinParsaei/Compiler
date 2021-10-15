@@ -3,6 +3,8 @@ import org.teavm.jso.dom.events.Event;
 import org.teavm.jso.dom.events.EventListener;
 import org.teavm.jso.dom.html.*;
 
+import java.util.ArrayList;
+
 public class Client extends CompilerMain {
     public static void main(String[] args) {
         HTMLDocument document = HTMLDocument.current();
@@ -60,7 +62,10 @@ public class Client extends CompilerMain {
         compiler.initLexer(lexer);
         lexer.setError(false);
         StringBuilder coloredText = new StringBuilder();
-        for (Token token : lexer.lex(text)) {
+        ArrayList<Token> tokens = lexer.lex(text);
+        int i = 0;
+        for (Token token : tokens) {
+            i++;
             switch (token.getName()) {
                 case "TXT":
                     coloredText.append("<font color=\"#7B986A\">").append(token.getText()).append("</font>");
@@ -73,6 +78,8 @@ public class Client extends CompilerMain {
                 case "FN":
                 case "VAR":
                 case "BOOL":
+                case "IN":
+                case "EXT":
                 case "NULL":
                 case "CLASS":
                 case "IMPORT":
@@ -92,6 +99,15 @@ public class Client extends CompilerMain {
                         coloredText.append("<font color=\"#808080\">").append(token.getText()).append("</font>");
                     else
                         coloredText.append(token.getText());
+                    break;
+                case "ID":
+                    System.out.println(tokens.get(i).getName());
+                    System.out.println(token.getText());
+                    if (tokens.get(i).getName().equals("OP_PAREN") && token.getText().equals("print")) {
+                        coloredText.append("<font color=\"#9f73ae\">").append(token.getText()).append("</font>");
+                    } else {
+                        coloredText.append(token.getText());
+                    }
                     break;
                 default:
                     coloredText.append(token.getText());
