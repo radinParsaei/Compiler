@@ -1,0 +1,7 @@
+print("please write 'test'\n")
+var a = input()
+if a == "test" {
+	print("Hooray")
+} else {
+	print("Ooops")
+}

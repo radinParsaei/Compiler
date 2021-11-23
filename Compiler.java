@@ -1003,7 +1003,7 @@ public class Compiler extends CompilerBase {
 		return false;
 	}
 
-	@ParserEvent(map = "program : exp SEP", priority = 46)
+	@ParserEvent(map = "program : exp SEP", priority = 47)
 	public Object executeValue(Parser parser) {
 		try {
 			if (parser.getParent().getTokens().get(parser.getParent().getListIndex() - 3).getName().equals("FOR")) {
