@@ -60,6 +60,10 @@ public class Targets {
         return "";
     }
 
+    public static boolean fileExists(String fileName) {
+        return false;
+    }
+
     public interface CustomWhileInterface {
         boolean run();
     }

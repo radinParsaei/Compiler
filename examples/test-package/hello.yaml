@@ -1,0 +1,8 @@
+name: hello
+author: radinParsaei
+#dependencies:
+files:
+  - git file:///Users/radin/Projects/Compiler/examples/test-package/src #Change the path to the one on your computer
+version: 0
+tags:
+  - library

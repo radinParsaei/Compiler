@@ -4,3 +4,6 @@
 [submodule "compiler-test"]
 	path = compiler-test
 	url = https://github.com/radinParsaei/compiler-test
+[submodule "PackageManager"]
+	path = PackageManager
+	url = https://github.com/radinParsaei/PackageManager

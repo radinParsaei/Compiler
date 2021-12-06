@@ -261,13 +261,36 @@ public class Compiler extends CompilerBase {
 		parser.on("TXT", "exp", this::text);
 		String fileName = parser.getTokens().get(1).getObject().toString();
 		if (!fileName.equals("random")) {
-			parsingImportedFile = true;
-			ArrayList<ProgramBase> result1 = new ArrayList<>();
-			filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName, false, null, null, null, null)).getTokens().get(0).getObject()), result1);
-			parsingImportedFile = false;
-			ProgramBase[] resultArray = new ProgramBase[result1.size()];
-			resultArray = result1.toArray(resultArray);
-			importedFiles.put(fileName, new SyntaxTree.Programs(resultArray));
+			if (Targets.fileExists(fileName)) {
+				parsingImportedFile = true;
+				ArrayList<ProgramBase> result1 = new ArrayList<>();
+				filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(fileName, false, null, null, null, null)).getTokens().get(0).getObject()), result1);
+				parsingImportedFile = false;
+				ProgramBase[] resultArray = new ProgramBase[result1.size()];
+				resultArray = result1.toArray(resultArray);
+				importedFiles.put(fileName, new SyntaxTree.Programs(resultArray));
+			} else if (!Targets.isWeb) {
+				boolean found = false;
+				for (Package aPackage : PackageManager.findPackageWithTags("library")) {
+					if (aPackage.getName().equals(fileName)) {
+						File srcDir = new File(PackageManager.getPackageDirectory(aPackage), "src");
+						if (srcDir.isDirectory()) {
+							parsingImportedFile = true;
+							ArrayList<ProgramBase> result1 = new ArrayList<>();
+							filterImportedProgram(((ProgramBase) CompilerMain.compile(new Compiler(new File(srcDir, aPackage.getName()).getPath(), false, null, null, null, null)).getTokens().get(0).getObject()), result1);
+							parsingImportedFile = false;
+							ProgramBase[] resultArray = new ProgramBase[result1.size()];
+							resultArray = result1.toArray(resultArray);
+							importedFiles.put(fileName, new SyntaxTree.Programs(resultArray));
+							found = true;
+						}
+					}
+				}
+				if (!found) {
+					syntaxError("Package " + fileName + " does not exist");
+					System.exit(-1);
+				}
+			}
 		}
 		return new SyntaxTree.Import(fileName);
 	}
@@ -1041,6 +1064,9 @@ public class Compiler extends CompilerBase {
 				}
 			}
 			if (Targets.isWeb && Targets.awaitedInput) {
+				SyntaxTree.deleteNativeFunction("input", "input", 0);
+				SyntaxTree.deleteNativeFunction(".", "runJS_str", 1);
+				SyntaxTree.deleteNativeFunction(".", "runJS_int", 1);
 				SyntaxTree.declareNativeFunction("input", "input", 0);
 				SyntaxTree.declareNativeFunction(".", "runJS_str", 1);
 				SyntaxTree.declareNativeFunction(".", "runJS_int", 1);

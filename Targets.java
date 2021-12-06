@@ -7,7 +7,6 @@ public class Targets {
     public static final boolean systemPrint = true;
     public static final boolean customWhile = false;
     public static final boolean isInThread = false;
-    public static final boolean useAnalyzer = false;
     public static boolean awaitedInput = false;
 
     public static void tokenizerError(int i, String line) {
@@ -25,6 +24,11 @@ public class Targets {
         }
         scanner.useDelimiter("\\Z");
         return scanner.next() + "\n";
+    }
+
+    public static boolean fileExists(String fileName) {
+        File file = new File(fileName);
+        return file.exists();
     }
 
     public interface CustomWhileInterface {
