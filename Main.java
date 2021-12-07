@@ -88,6 +88,13 @@ public class Main extends CompilerMain {
 			if (argParser.getItems().contains("lex")) {
 				System.out.println(lex(compiler));
 			} else {
+				if (argParser.getItems().contains("shell")) {
+					SyntaxTree.getFunctions().clear();
+					SyntaxTree.getVariables().clear();
+					SyntaxTree.getClassesParameters().clear();
+					SyntaxTree.CreateLambda.setCounter(0);
+					SyntaxTree.resetNameSpaces();
+				}
 				compile(compiler);
 			}
 			if (hotReload) {

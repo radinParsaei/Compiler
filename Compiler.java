@@ -695,6 +695,8 @@ public class Compiler extends CompilerBase {
 			SyntaxTree.deleteNativeFunction((String) args[0].getData(), (String) args[1].getData(), ((BigDecimal) args[2].getData()).intValue());
 			return new SyntaxTree.Null();
 		} else if ((parser.getTokens().get(0).getObject()).toString().equals("print") && args.length == 1) {
+			return new SyntaxTree.PrintFunction(new SyntaxTree.Print(args[0], new SyntaxTree.Text("\n")).setSeparator(new SyntaxTree.Text("")));
+		} else if ((parser.getTokens().get(0).getObject()).toString().equals("write") && args.length == 1) {
 			return new SyntaxTree.PrintFunction(new SyntaxTree.Print(args[0]));
 		} else if ((parser.getTokens().get(0).getObject()).toString().equals("exit") && (args.length == 1 || args.length == 0)) {
 			if (args.length == 0)
@@ -1172,7 +1174,6 @@ public class Compiler extends CompilerBase {
 			}
 			if (!compiled) {
 				((ProgramBase)result.getTokens().get(0).getObject()).eval();
-				if (Targets.isWeb) System.out.println("\nCode Running Done");
 			}
 			SyntaxTree.deleteNativeFunction("input", "input", 0);
 		} else {

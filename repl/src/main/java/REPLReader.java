@@ -76,7 +76,7 @@ public class REPLReader {
             completion.put("SC", new StringsCompleter("/hist", "/help", "/colorhelp", "/prompt1", "/prompt2", "/run"));
             completion.put("SC1", new StringsCompleter("/prompt1", "/prompt2"));
             completion.put("SC1P", new StringsCompleter(shellvars));
-            completion.put("C1", new StringsCompleter("print"));
+            completion.put("C1", new StringsCompleter("print("));
             completion.put("ST", new StringsCompleter("if"));
             completion.put("OPBR", new StringsCompleter("{"));
             completion.put("CLBR", new StringsCompleter("}"));

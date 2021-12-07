@@ -4,6 +4,7 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -20,7 +21,10 @@ public class Highlighter implements org.jline.reader.Highlighter {
         Lexer lexer = new Lexer(compiler);
         compiler.initLexer(lexer);
         lexer.setError(false);
-        for (Token token : lexer.lex(s.replace("\u200B", ""))) {
+        ArrayList<Token> tokens = lexer.lex(s.replace("\u200B", ""));
+        int i = 0;
+        for (Token token : tokens) {
+            i++;
             if (colorConfigs == null) {
                 switch (token.getName()) {
                     case "TXT":
@@ -64,7 +68,13 @@ public class Highlighter implements org.jline.reader.Highlighter {
                             builder.styled(AttributedStyle.DEFAULT, token.getText());
                         break;
                     default:
-                        builder.styled(AttributedStyle.DEFAULT, token.getText());
+                        if ((token.getText().equals("print") || token.getText().equals("write")) &&
+                                token.getName().equals("ID") && tokens.size() > i &&
+                                tokens.get(i).getName().equals("OP_PAREN")) {
+                            builder.styled(attributedStyle.foreground(147), token.getText());
+                        } else {
+                            builder.styled(AttributedStyle.DEFAULT, token.getText());
+                        }
                         break;
                 }
             } else {

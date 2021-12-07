@@ -101,7 +101,7 @@ public class Client extends CompilerMain {
                         coloredText.append(token.getText());
                     break;
                 case "ID":
-                    if (tokens.get(i).getName().equals("OP_PAREN") && token.getText().equals("print")) {
+                    if (tokens.get(i).getName().equals("OP_PAREN") && (token.getText().equals("print") || token.getText().equals("write"))) {
                         coloredText.append("<font color=\"#9f73ae\">").append(token.getText()).append("</font>");
                     } else {
                         coloredText.append(token.getText());
