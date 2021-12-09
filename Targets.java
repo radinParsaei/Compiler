@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Targets {
@@ -22,8 +23,12 @@ public class Targets {
             System.err.println("Failed to open file: " + fileName);
             System.exit(1);
         }
-        scanner.useDelimiter("\\Z");
-        return scanner.next() + "\n";
+        try {
+            scanner.useDelimiter("\\Z");
+            return scanner.next() + "\n";
+        } catch (NoSuchElementException ignored) {
+            return "";
+        }
     }
 
     public static boolean fileExists(String fileName) {

@@ -22,3 +22,5 @@ and to execute it use java -jar <serializedfile> or nothing (graalVM doesn't sup
 
 
 error icon in the web comes from https://www.flaticon.com/premium-icon/cancel_1008927?term=cancel&page=1&position=12&page=1&position=12&related_id=1008927&origin=tag
+
+run `clonePKG.sh` first

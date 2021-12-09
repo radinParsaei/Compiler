@@ -1,3 +1,5 @@
+import com.sun.tools.javac.util.StringUtils;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ public class Compiler extends CompilerBase {
 	private boolean isTestModeOn = false;
 	static String testCode = "";
 	private static final HashMap<String, SyntaxTree.Programs> importedFiles = new HashMap<>();
+	private Parser lexResult;
 
 	public boolean isIsTestModeOn() {
 		return isTestModeOn;
@@ -166,6 +169,7 @@ public class Compiler extends CompilerBase {
 	}
 
 	public void afterLex(Parser result) {
+		lexResult = new Parser((ArrayList<Token>) result.getTokens().clone());
 		result.on("THIS", "exp", (parser) -> new SyntaxTree.This());
 		SyntaxTree.Import.doImport = fileName1 -> {
 			if (fileName1.equals("random")) {
@@ -248,6 +252,10 @@ public class Compiler extends CompilerBase {
 			} else if (getCounter() == 7) {
 				parser.setSingleRunPerLocation(false);
 			} else if (getCounter() == 8) {
+				parser.setSingleRunPerLocation(true);
+			} else if (getCounter() == 9) {
+				parser.setSingleRunPerLocation(false);
+			} else if (getCounter() == 10) {
 				parser.setSingleRunPerLocation(true);
 			}
 		}
@@ -501,18 +509,20 @@ public class Compiler extends CompilerBase {
 		return new SyntaxTree.Div((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp OP2 exp(?! DOT)", priority = 21)
+	@ParserEvent(map = "exp : exp( SEP)? OP2( SEP)? exp(?! DOT)", priority = 21)
 	public Object additionAndSubtraction(Parser parser) {
 		setCounter(16);
+		parser.remove("SEP");
 		if (parser.getTokens().get(1).getText().equals("+")) {
 			return new SyntaxTree.Add((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 		}
 		return new SyntaxTree.Sub((ValueBase)parser.getTokens().get(0).getObject(), (ValueBase)parser.getTokens().get(2).getObject());
 	}
 
-	@ParserEvent(map = "exp : exp COMP exp(?! DOT)", priority = 22)
+	@ParserEvent(map = "exp : exp( SEP)? COMP( SEP)? exp(?! DOT)", priority = 22)
 	public Object comparison(Parser parser) {
 		setCounter(16);
+		parser.remove("SEP");
 		switch (parser.getTokens().get(1).getText()) {
 			case "==":
 				return new SyntaxTree.StrictEquals((ValueBase) parser.getTokens().get(0).getObject(),
@@ -542,9 +552,10 @@ public class Compiler extends CompilerBase {
 		}
 	}
 
-	@ParserEvent(map = "exp : exp OP3 exp(?! DOT)", priority = 23)
+	@ParserEvent(map = "exp : exp( SEP)? OP3( SEP)? exp(?! DOT)", priority = 23)
 	public Object bitwiseAnd(Parser parser) {
 		setCounter(16);
+		parser.remove("SEP");
 		switch (parser.getTokens().get(1).getText()) {
 			case ">>":
 				return new SyntaxTree.RightShift((ValueBase) parser.getTokens().get(0).getObject(), (ValueBase) parser.getTokens().get(2).getObject());
@@ -910,7 +921,7 @@ public class Compiler extends CompilerBase {
 				new SyntaxTree.If(new SyntaxTree.Not(new SyntaxTree.CallFunction("hasNext").fromInstance(instance)
 						.setAddInstanceName(true)), new SyntaxTree.Break()),
 				new SyntaxTree.SetVariable((String) parser.getTokens().get(1).getObject(),
-						new SyntaxTree.CallFunction("next").fromInstance(instance).setAddInstanceName(true)),
+						new SyntaxTree.CallFunction("next").fromInstance(instance).setAddInstanceName(true)).setIsDeclaration(true),
 				parser.getTokens().get(4).getName().equals("program")? (ProgramBase) parser.getTokens().get(4).getObject():new SyntaxTree.Programs()));
 	}
 
@@ -1054,8 +1065,7 @@ public class Compiler extends CompilerBase {
 			return ;
 		}
 		if (result.getTokens().size() != 1) {
-			System.out.println("Syntax is:\n" + result);
-			syntaxError("Syntax Error");
+			syntaxError(result);
 			return ;
 		}
 		if (result.getTokens().get(0).getName().equals("program")) {
@@ -1177,9 +1187,122 @@ public class Compiler extends CompilerBase {
 			}
 			SyntaxTree.deleteNativeFunction("input", "input", 0);
 		} else {
-			System.out.println("Syntax is:\n" + result);
-			syntaxError("Syntax Error");
+			syntaxError(result);
 		}
+	}
+
+	private int count(String find, String in) {
+		int count = 0;
+		int lastIndex = 0;
+		while (lastIndex != -1) {
+			lastIndex = in.indexOf(find,lastIndex);
+			if (lastIndex != -1) {
+				count ++;
+				lastIndex += find.length();
+			}
+		}
+		return count;
+	}
+
+	private void syntaxError(Parser result) {
+		boolean foundError = false;
+		String map = lexResult.getMap();
+		if (count("OP_BRACKET", map) != count("CL_BRACKET", map)) {
+			syntaxError("The number of open brackets('{') and close brackets('}') do not match");
+			int openedOnes = 0;
+			Token lastBracket = null;
+			for (Token token : lexResult.getTokens()) {
+				if (token.getName().equals("OP_BRACKET")) {
+					openedOnes++;
+					lastBracket = token;
+				} else if (token.getName().equals("CL_BRACKET")) {
+					openedOnes--;
+					lastBracket = token;
+				}
+				if (openedOnes == -1) {
+					if (lastBracket != null) {
+						syntaxError("\tthere is an extra '}' in line: " + lastBracket.getLine());
+						break;
+					}
+				}
+			}
+			if (openedOnes > 0) {
+				if (lastBracket != null) syntaxError("\tthe bracket in line " + lastBracket.getLine() + " was not closed");
+			}
+			foundError = true;
+		}
+		if (count("OP_PAREN", map) != count("CL_PAREN", map)) {
+			syntaxError("The number of open parentheses('(') and close parentheses(')') do not match");
+			int openedOnes = 0;
+			Token lastParen = null;
+			for (Token token : lexResult.getTokens()) {
+				if (token.getName().equals("OP_PAREN")) {
+					openedOnes++;
+					lastParen = token;
+				} else if (token.getName().equals("CL_PAREN")) {
+					openedOnes--;
+					lastParen = token;
+				}
+				if (openedOnes == -1) {
+					if (lastParen != null) {
+						syntaxError("\tthere is an extra ')' in line: " + lastParen.getLine());
+						break;
+					}
+				}
+			}
+			if (openedOnes > 0) {
+				if (lastParen != null) syntaxError("\tthe parentheses in line " + lastParen.getLine() + " was not closed");
+			}
+			foundError = true;
+		}
+		if (count("OP_SQ_BRACKET", map) != count("CL_SQ_BRACKET", map)) {
+			syntaxError("The number of open square brackets('[') and close parentheses(']') do not match");
+			int openedOnes = 0;
+			Token lastParen = null;
+			for (Token token : lexResult.getTokens()) {
+				if (token.getName().equals("OP_SQ_BRACKET")) {
+					openedOnes++;
+					lastParen = token;
+				} else if (token.getName().equals("CL_SQ_BRACKET")) {
+					openedOnes--;
+					lastParen = token;
+				}
+				if (openedOnes == -1) {
+					if (lastParen != null) {
+						syntaxError("\tthere is an extra ']' in line: " + lastParen.getLine());
+						break;
+					}
+				}
+			}
+			if (openedOnes > 0) {
+				if (lastParen != null) syntaxError("\tthe square bracket in line " + lastParen.getLine() + " was not closed");
+			}
+			foundError = true;
+		}
+		for (Token token : result.getTokens()) {
+			if ("FOR".equals(token.getName())) {
+				syntaxError("there is an incomplete 'for' statement in line " + token.getLine());
+				foundError = true;
+				for (int i = 0; i < lexResult.getTokens().size(); i++) {
+					if (lexResult.getTokens().get(i) == token) {
+						boolean isOldStyled = true;
+						for (int j = 1; j < 6; j++) {
+							if (lexResult.getTokens().get(i + j).getName().equals("IN")) {
+								isOldStyled = false;
+								break;
+							}
+						}
+						if (!isOldStyled && lexResult.getTokens().get(i + 1).getName().equals("VAR")) {
+							syntaxError("perhaps it's because there is an extra 'var' after 'for' (it must be like: for i in 1...10)");
+						} else if (isOldStyled && !lexResult.getTokens().get(i + 1).getName().equals("OP_PAREN")) {
+							syntaxError("perhaps it's because there is no '(' after 'for'");
+						}
+					}
+				}
+				break;
+			}
+		}
+		if (!foundError) System.out.println("ERROR: There is a syntax error in the code\nHere is the parsed version of it:\n" + result);
 	}
 
 	public static void syntaxError(int errorChar, String line) {

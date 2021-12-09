@@ -31,6 +31,8 @@ web/.idea
 web/web.iml
 web/target/web-1.0-SNAPSHOT/VM.js
 web/target/web-1.0-SNAPSHOT/VM.wasm
-PackageMaanager/.idea/
-PackageMaanager/pkg.yaml
-PackageMaanager/target/
+web/.project
+web/.settings/
+PackageManager/
+PackageManager.java
+Package.java
