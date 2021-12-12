@@ -1,6 +1,5 @@
 import org.teavm.jso.JSBody;
 import org.teavm.jso.JSObject;
-import org.w3c.dom.Node;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -11,6 +10,9 @@ public class XMLToSyntaxTree {
 
     @JSBody(params = { "xml" }, script = "return xml.firstElementChild;")
     private static native JSObject getFirstChild(JSObject xml);
+
+    @JSBody(params = { "xml" }, script = "return xml.lastElementChild;")
+    private static native JSObject getLastChild(JSObject xml);
 
     @JSBody(params = { "xml" }, script = "return xml.nodeName;")
     private static native String getName(JSObject xml);
@@ -71,15 +73,25 @@ public class XMLToSyntaxTree {
                 ProgramBase program = xmlToProgram(getFirstChild(nextElement(getFirstChild(node))));
                 programs.add(new SyntaxTree.While(condition, program));
             } else if (getName(node).equals("function") || getName(node).equals("fun")) {
-                programs.add(new SyntaxTree.Function(getParameter(node, getName(node).equals("fun")? "n":"name"), xmlToProgram(getFirstChild(node)), getParameter(node, getName(node).equals("fun")? "a":"args").split(",")));
+                programs.add(new SyntaxTree.Function(getParameter(node, getName(node).equals("fun")? "n":"name").replace("#", "<"), xmlToProgram(getFirstChild(node)), getParameter(node, getName(node).equals("fun")? "a":"args").split(",")));
             } else if (getName(node).equals("break") || getName(node).equals("br")) {
                 programs.add(new SyntaxTree.Break());
             } else if (getName(node).equals("continue") || getName(node).equals("con")) {
                 programs.add(new SyntaxTree.Continue());
             } else if (getName(node).equals("set-variable") || getName(node).equals("set")) {
-                programs.add(new SyntaxTree.SetVariable(getParameter(node, getName(node).equals("set")? "n":"name"), getValueFromNode(getFirstChild(getFirstChild(node)))));
+                ValueBase instance = null;
+                try {
+                    if (getName(getLastChild(node)).equals("instance")) {
+                        instance = getValueFromNode(getFirstChild(getLastChild(node)));
+                    }
+                } catch (Exception ignored) {}
+                programs.add(new SyntaxTree.SetVariable(getParameter(node, getName(node).equals("set")? "n":"name"), getValueFromNode(getFirstChild(getFirstChild(node))))
+                        .fromInstance(instance).setIsDeclaration(getParameter(node, getName(node).equals("set")? "d":"declaration").equals("true"))
+                        .setAddInstanceName(getParameter(node, getName(node).equals("set")? "ain":"addInstanceName").equals("true")));
             } else if (getName(node).equals("repeat") || getName(node).equals("r")) {
                 programs.add(new SyntaxTree.Repeat(getValueFromNode(getFirstChild(nextElement(getFirstChild(node)))), xmlToProgram(getFirstChild(getFirstChild(node)))));
+            } else if (getName(node).equals("class") || getName(node).equals("cl")) {
+                programs.add(new SyntaxTree.CreateClass(getParameter(node, getName(node).equals("cl")? "n":"name"), xmlToProgram(getFirstChild(node))));
             } else if (getName(node).equals("for") || getName(node).equals("f")) {
                 ValueBase condition;
                 ProgramBase step, init, program;
@@ -195,25 +207,53 @@ public class XMLToSyntaxTree {
             case "ef":
                 return new SyntaxTree.ExitFunction((SyntaxTree.Exit) ((SyntaxTree.Programs) xmlToProgram(getFirstChild(node))).getPrograms()[0]);
             case "variable":
-            case "v":
-                return new SyntaxTree.Variable(getNodeValue(node));
+            case "v": {
+                ValueBase instance = null;
+                try {
+                    if (getName(getLastChild(node)).equals("instance")) {
+                        instance = getValueFromNode(getFirstChild(getLastChild(node)));
+                    }
+                } catch (Exception ignored) {}
+                return new SyntaxTree.Variable(getParameter(node, getName(node).equals("v")? "n":"name")).fromInstance(instance)
+                        .setAddInstanceName(getParameter(node, getName(node).equals("v")? "ain":"addInstanceName").equals("true"));
+            }
             case "increase":
             case "in":
                 return new SyntaxTree.Increase((SyntaxTree.Variable) getValueFromNode(getFirstChild(node)), getParameter(node, getName(node).equals("in")? "p":"is-postfix").equals("true"));
             case "decrease":
             case "de":
                 return new SyntaxTree.Decrease((SyntaxTree.Variable) getValueFromNode(getFirstChild(node)), getParameter(node, getName(node).equals("de")? "p":"is-postfix").equals("true"));
+            case "createInstance":
+            case "ci": {
+                ArrayList<ValueBase> values = new ArrayList<>();
+                JSObject node1 = getFirstChild(node);
+                while (node1 != null) {
+                    values.add(getValueFromNode(node1));
+                    node1 = nextElement(node1);
+                }
+                ValueBase[] valuesArray = new ValueBase[values.size()];
+                valuesArray = values.toArray(valuesArray);
+                return new SyntaxTree.CreateInstance(getParameter(node, getName(node).equals("ci")? "n":"name"), valuesArray);
+            }
             case "call-function":
             case "c": {
                 ArrayList<ValueBase> values = new ArrayList<>();
                 JSObject node_ = getFirstChild(node);
                 while (node_ != null) {
+                    if (getName(node_).equals("instance")) break;
                     values.add(getValueFromNode(getFirstChild(node_)));
                     node_ = nextElement(node_);
                 }
                 ValueBase[] valuesArray = new ValueBase[values.size()];
                 valuesArray = values.toArray(valuesArray);
-                return new SyntaxTree.CallFunction(getParameter(node, getName(node).equals("c")? "n":"name"), valuesArray);
+                ValueBase instance = null;
+                try {
+                    if (getName(getLastChild(node)).equals("instance")) {
+                        instance = getValueFromNode(getFirstChild(getLastChild(node)));
+                    }
+                } catch (Exception ignored) {}
+                return new SyntaxTree.CallFunction(getParameter(node, getName(node).equals("c")? "n":"name"), valuesArray)
+                        .fromInstance(instance).setAddInstanceName(getParameter(node, getName(node).equals("c")? "ain":"addInstanceName").equals("true"));
             }
         }
         return new SyntaxTree.Null();
